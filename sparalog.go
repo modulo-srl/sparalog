@@ -21,11 +21,12 @@ type Logger interface {
 	Trace(args ...interface{})
 	Print(args ...interface{}) // Info() alias
 
-	ResetWriters(Level, Writer)
-	ResetAllWriters(Writer)
-	AddWriter(Level, Writer, WriterID)
-	RemoveWriter(Level, WriterID)
+	ResetWriters(Writer)
+	ResetLevelWriters(Level, Writer)
+	AddWriter(Writer, WriterID)
+	AddLevelWriter(Level, Writer, WriterID)
 	AddLevelsWriter([]Level, Writer, WriterID)
+	RemoveWriter(Level, WriterID)
 
 	Mute(Level, bool)
 	EnableStacktrace(Level, bool)
@@ -34,22 +35,30 @@ type Logger interface {
 
 	FatalTrace(stackTrace string, args ...interface{})
 
-	Log(Level, string, ...interface{})
-	Logf(Level, string, string, ...interface{})
+	Log(Level, string, bool, ...interface{})
+	Logf(Level, string, bool, string, ...interface{})
 
-	Write(Item)
+	Write(Item, bool)
 
 	Close()
 }
 
 // Writer is the writer used by the Logger for one or more log levels.
 type Writer interface {
-	Write(Item)
+	Write(Item) WriterError
 	Close()
+
+	SetFeedbackChan(chan WriterError)
+	FeedbackError(WriterError)
+
+	ErrorItem(error) WriterError
 }
 
 // WriterID is the Writer ID.
 type WriterID string
+
+// WriterError is an error, with stack trace, wrapped on Item.
+type WriterError *Item
 
 // FatalExitCode is the Exit Code used in Fatal() and Fatalf().
 var FatalExitCode = 1

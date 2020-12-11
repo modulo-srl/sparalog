@@ -5,9 +5,12 @@ import (
 	"sync"
 
 	"github.com/modulo-srl/sparalog"
+	"github.com/modulo-srl/sparalog/writers/templates"
 )
 
 type fileWriter struct {
+	templates.Writer
+
 	mu sync.Mutex
 
 	filename string
@@ -30,13 +33,18 @@ func NewFileWriter(filename string) (sparalog.Writer, error) {
 	return &w, nil
 }
 
-func (w *fileWriter) Write(item sparalog.Item) {
+func (w *fileWriter) Write(item sparalog.Item) sparalog.WriterError {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	s := item.String(true, true)
 
-	w.file.WriteString(s + "\n")
+	_, err := w.file.WriteString(s + "\n")
+	if err != nil {
+		return w.ErrorItem(err)
+	}
+
+	return nil
 }
 
 func (w *fileWriter) Close() {

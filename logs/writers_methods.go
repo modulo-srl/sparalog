@@ -15,11 +15,6 @@ func NewFileWriter(filename string) (sparalog.Writer, error) {
 	return writers.NewFileWriter(filename)
 }
 
-// NewCallbackWriter returns a new callbackWriter.
-func NewCallbackWriter(callback writers.CallbackWriterCallback) sparalog.Writer {
-	return writers.NewCallbackWriter(callback)
-}
-
 // NewSentryWriter returns a new sentryWriter.
 func NewSentryWriter() (sparalog.Writer, error) {
 	return writers.NewSentryWriter()
@@ -28,4 +23,14 @@ func NewSentryWriter() (sparalog.Writer, error) {
 // NewTelegramWriter returns a new telegramWriter.
 func NewTelegramWriter(botAPIKey string, channelID int) (sparalog.Writer, error) {
 	return writers.NewTelegramWriter(botAPIKey, channelID)
+}
+
+// NewCallbackWriter returns a new callbackWriter.
+func NewCallbackWriter(callback writers.CallbackWriterCallback) sparalog.Writer {
+	return writers.NewCallbackWriter(callback)
+}
+
+// NewCallbackAsyncWriter returns a new callbackAsyncWriter.
+func NewCallbackAsyncWriter(callback writers.CallbackWriterCallback) sparalog.Writer {
+	return writers.NewCallbackAsyncWriter(callback)
 }

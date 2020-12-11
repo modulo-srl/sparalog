@@ -31,8 +31,9 @@ func Init(programName string) {
 }
 
 // StartPanicWatcher starts a supervisor that monitors panics in all goroutines.
-// Supervision is made starting a parent + child processes,
-// so this function should not to be called in debugging sessions.
+// Since the supervision is made starting a parent + child processes:
+// - Call the function after all writers initialization, or at least after fatal level initialization;
+// - This function should not to be called in debugging sessions.
 func StartPanicWatcher() {
 	exitStatus, err := panicwrap.Wrap(&panicwrap.WrapConfig{
 		Handler:   panicHandler,
@@ -58,7 +59,7 @@ func StartPanicWatcher() {
 func Done() {
 	err := recover()
 	if err != nil {
-		Default.Fatal(err)
+		Fatal(err)
 	}
 
 	if closed {

@@ -13,13 +13,15 @@ func TestMainPanic(t *testing.T) {
 	defer logs.Done()
 
 	w := logs.NewCallbackWriter(
-		func(item sparalog.Item) {
+		func(item sparalog.Item) error {
 			if item.Level == sparalog.FatalLevel {
-				os.Exit(0)
+				os.Exit(1)
 			}
+			return nil
 		},
 	)
-	logs.ResetAllWriters(w)
+	//logs.ResetWriters(w)
+	logs.AddWriter(w, "")
 
 	makePanic()
 	t.Fatal("panic not logged")

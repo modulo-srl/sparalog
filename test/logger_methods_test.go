@@ -13,11 +13,12 @@ func TestRootLoggerMethods(t *testing.T) {
 	var traced string
 
 	w := logs.NewCallbackWriter(
-		func(item sparalog.Item) {
+		func(item sparalog.Item) error {
 			traced = item.String(false, true)
+			return nil
 		},
 	)
-	logs.ResetAllWriters(w)
+	logs.ResetWriters(w)
 
 	logs.Error("asd")
 	traced1 := traced

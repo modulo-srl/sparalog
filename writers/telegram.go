@@ -13,6 +13,8 @@ import (
 )
 
 type telegramWriter struct {
+	templates.Writer
+
 	apiKey    string
 	channelID int
 
@@ -33,15 +35,16 @@ func NewTelegramWriter(botAPIKey string, channelID int) (sparalog.Writer, error)
 
 // Write enqueue an item and returns immediately,
 // or blocks while the internal queue is full.
-func (w *telegramWriter) Write(item sparalog.Item) {
+func (w *telegramWriter) Write(item sparalog.Item) sparalog.WriterError {
 	w.worker.Enqueue(item)
+	return nil
 }
 
 func (w *telegramWriter) Close() {
 	w.worker.Close(3)
 }
 
-func (w *telegramWriter) ProcessQueueItem(item sparalog.Item) {
+func (w *telegramWriter) ProcessQueueItem(item sparalog.Item) sparalog.WriterError {
 	var s string
 
 	prog, host := env.Device()
@@ -56,7 +59,12 @@ func (w *telegramWriter) ProcessQueueItem(item sparalog.Item) {
 
 	s += "\n" + env.Runtime()
 
-	w.sendMessage(s)
+	err := w.sendMessage(s)
+	if err != nil {
+		return w.ErrorItem(err)
+	}
+
+	return nil
 }
 
 type telegramReq struct {
@@ -102,7 +110,7 @@ func (w *telegramWriter) sendMessage(s string) error {
 
 	// Read response.
 	if resp.StatusCode != 200 {
-		return err
+		return errors.New("http status: " + resp.Status)
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)

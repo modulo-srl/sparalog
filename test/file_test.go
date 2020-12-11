@@ -15,7 +15,7 @@ func TestFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	logs.ResetAllWriters(w)
+	logs.ResetWriters(w)
 
 	logs.StartPanicWatcher()
 

@@ -46,6 +46,9 @@ type Logger struct {
 
 	tag string
 
+	writersErrorFeedback chan sparalog.WriterError
+	writersFeedbackWG    sync.WaitGroup
+
 	mu       sync.RWMutex
 	writers  [sparalog.LevelsCount]map[sparalog.WriterID]sparalog.Writer
 	levState [sparalog.LevelsCount]levelState
@@ -60,92 +63,92 @@ type levelState struct {
 
 // Fatalf logs to fatal stream using the same fmt.Printf() interface.
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	l.Logf(sparalog.FatalLevel, "", format, args...)
+	l.Logf(sparalog.FatalLevel, "", false, format, args...)
 }
 
 // Fatal logs to fatal stream using the same fmt.Print() interface.
 func (l *Logger) Fatal(args ...interface{}) {
-	l.Log(sparalog.FatalLevel, "", args...)
+	l.Log(sparalog.FatalLevel, "", false, args...)
 }
 
 // FatalTrace logs to fatal stream with a custom stack trace.
 func (l *Logger) FatalTrace(stackTrace string, args ...interface{}) {
-	l.Log(sparalog.FatalLevel, stackTrace, args...)
+	l.Log(sparalog.FatalLevel, stackTrace, false, args...)
 }
 
 // Errorf logs to error stream using the same fmt.Printf() interface.
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.Logf(sparalog.ErrorLevel, "", format, args...)
+	l.Logf(sparalog.ErrorLevel, "", false, format, args...)
 }
 
 // Error logs to error stream using the same fmt.Print() interface.
 func (l *Logger) Error(args ...interface{}) {
-	l.Log(sparalog.ErrorLevel, "", args...)
+	l.Log(sparalog.ErrorLevel, "", false, args...)
 }
 
 // Warnf logs to warning stream using the same fmt.Printf() interface.
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.Logf(sparalog.WarnLevel, "", format, args...)
+	l.Logf(sparalog.WarnLevel, "", false, format, args...)
 }
 
 // Warn logs to warning stream using the same fmt.Print() interface.
 func (l *Logger) Warn(args ...interface{}) {
-	l.Log(sparalog.WarnLevel, "", args...)
+	l.Log(sparalog.WarnLevel, "", false, args...)
 }
 
 // Infof logs to info stream using the same fmt.Printf() interface.
 func (l *Logger) Infof(format string, args ...interface{}) {
-	l.Logf(sparalog.InfoLevel, "", format, args...)
+	l.Logf(sparalog.InfoLevel, "", false, format, args...)
 }
 
 // Info logs to info stream using the same fmt.Print() interface.
 func (l *Logger) Info(args ...interface{}) {
-	l.Log(sparalog.InfoLevel, "", args...)
+	l.Log(sparalog.InfoLevel, "", false, args...)
 }
 
 // Printf logs to info stream using the same fmt.Printf() interface.
 func (l *Logger) Printf(format string, args ...interface{}) {
-	l.Logf(sparalog.InfoLevel, "", format, args...)
+	l.Logf(sparalog.InfoLevel, "", false, format, args...)
 }
 
 // Print logs to info stream using the same fmt.Print() interface.
 func (l *Logger) Print(args ...interface{}) {
-	l.Log(sparalog.InfoLevel, "", args...)
+	l.Log(sparalog.InfoLevel, "", false, args...)
 }
 
 // Debugf logs to debug stream using the same fmt.Printf() interface.
 func (l *Logger) Debugf(format string, args ...interface{}) {
-	l.Logf(sparalog.DebugLevel, "", format, args...)
+	l.Logf(sparalog.DebugLevel, "", false, format, args...)
 }
 
 // Debug logs to debug stream using the same fmt.Print() interface.
 func (l *Logger) Debug(args ...interface{}) {
-	l.Log(sparalog.DebugLevel, "", args...)
+	l.Log(sparalog.DebugLevel, "", false, args...)
 }
 
 // Tracef logs to trace stream using the same fmt.Printf() interface.
 func (l *Logger) Tracef(format string, args ...interface{}) {
-	l.Logf(sparalog.TraceLevel, "", format, args...)
+	l.Logf(sparalog.TraceLevel, "", false, format, args...)
 }
 
 // Trace logs to trace stream using the same fmt.Print() interface.
 func (l *Logger) Trace(args ...interface{}) {
-	l.Log(sparalog.TraceLevel, "", args...)
+	l.Log(sparalog.TraceLevel, "", false, args...)
 }
 
-// ResetAllWriters reset the writers for all the levels to an optional default writer.
-func (l *Logger) ResetAllWriters(defaultW sparalog.Writer) {
+// ResetWriters reset the writers for all the levels to an optional default writer.
+func (l *Logger) ResetWriters(defaultW sparalog.Writer) {
 	if l.parent != nil {
 		return
 	}
 
 	for i := range l.writers {
-		l.ResetWriters(sparalog.Level(i), defaultW)
+		l.ResetLevelWriters(sparalog.Level(i), defaultW)
 	}
 }
 
-// ResetWriters remove all level's writers and reset to an optional default writer.
-func (l *Logger) ResetWriters(level sparalog.Level, defaultW sparalog.Writer) {
+// ResetLevelWriters remove all level's writers and reset to an optional default writer.
+func (l *Logger) ResetLevelWriters(level sparalog.Level, defaultW sparalog.Writer) {
 	if l.parent != nil {
 		return
 	}
@@ -156,15 +159,27 @@ func (l *Logger) ResetWriters(level sparalog.Level, defaultW sparalog.Writer) {
 	ww := make(map[sparalog.WriterID]sparalog.Writer, 4)
 
 	if defaultW != nil {
-		ww["0"] = defaultW
+		ww[defaultWriterID] = defaultW
 	}
 
 	l.writers[level] = ww
 }
 
-// AddWriter add a writer to a level.
+// AddWriter add a writer to all levels.
 // id is optional, but useful for RemoveWriter().
-func (l *Logger) AddWriter(level sparalog.Level, w sparalog.Writer, id sparalog.WriterID) {
+func (l *Logger) AddWriter(w sparalog.Writer, id sparalog.WriterID) {
+	if l.parent != nil {
+		return
+	}
+
+	for i := range l.writers {
+		l.AddLevelWriter(sparalog.Level(i), w, id)
+	}
+}
+
+// AddLevelWriter add a writer to a level.
+// id is optional, but useful for RemoveWriter().
+func (l *Logger) AddLevelWriter(level sparalog.Level, w sparalog.Writer, id sparalog.WriterID) {
 	if l.parent != nil {
 		return
 	}
@@ -177,6 +192,10 @@ func (l *Logger) AddWriter(level sparalog.Level, w sparalog.Writer, id sparalog.
 	}
 
 	l.writers[level][id] = w
+
+	if id != defaultWriterID {
+		w.SetFeedbackChan(l.writersErrorFeedback)
+	}
 }
 
 // AddLevelsWriter add a writer to several levels.
@@ -195,6 +214,10 @@ func (l *Logger) AddLevelsWriter(levels []sparalog.Level, w sparalog.Writer, id 
 		}
 
 		l.writers[level][id] = w
+	}
+
+	if id != defaultWriterID {
+		w.SetFeedbackChan(l.writersErrorFeedback)
 	}
 }
 
@@ -230,7 +253,7 @@ func (l *Logger) EnableStacktrace(level sparalog.Level, state bool) {
 	l.levState[level].stacktrace = state
 }
 
-// newLogItem generate a prefilled log item.
+// newLogItem generate a prefilled log item - thread safe.
 // If ok = false the log cannot be performed (level is muted).
 // stackTrace: custom stacktrace.
 func (l *Logger) newLogItem(level sparalog.Level, stackTrace string) (item sparalog.Item, ok bool) {
@@ -243,11 +266,12 @@ func (l *Logger) newLogItem(level sparalog.Level, stackTrace string) (item spara
 	}
 
 	var st string
-	switch {
-	case stackTrace != "":
-		st = stackTrace
-	case l.levState[level].stacktrace:
-		st = env.StackTrace(skipStackCalls)
+	if l.levState[level].stacktrace {
+		if stackTrace != "" {
+			st = stackTrace
+		} else {
+			st = env.StackTrace(skipStackCalls)
+		}
 	}
 
 	item = sparalog.Item{
@@ -261,8 +285,8 @@ func (l *Logger) newLogItem(level sparalog.Level, stackTrace string) (item spara
 	return
 }
 
-// Log to level stream - abstract function.
-func (l *Logger) Log(level sparalog.Level, stackTrace string, args ...interface{}) {
+// Log to level stream - abstract function, thread safe.
+func (l *Logger) Log(level sparalog.Level, stackTrace string, defaultWriterOnly bool, args ...interface{}) {
 	defer func() {
 		if level == sparalog.FatalLevel {
 			l.Close()
@@ -278,15 +302,15 @@ func (l *Logger) Log(level sparalog.Level, stackTrace string, args ...interface{
 	item.Line = fmt.Sprint(args...)
 
 	if l.parent != nil {
-		l.parent.Write(item)
+		l.parent.Write(item, defaultWriterOnly)
 		return
 	}
 
-	l.Write(item)
+	l.Write(item, defaultWriterOnly)
 }
 
-// Logf logs to level stream using format - abstract function.
-func (l *Logger) Logf(level sparalog.Level, stackTrace string, format string, args ...interface{}) {
+// Logf logs to level stream using format - abstract function, thread safe.
+func (l *Logger) Logf(level sparalog.Level, stackTrace string, defaultWriterOnly bool, format string, args ...interface{}) {
 	defer func() {
 		if level == sparalog.FatalLevel {
 			l.Close()
@@ -302,50 +326,88 @@ func (l *Logger) Logf(level sparalog.Level, stackTrace string, format string, ar
 	item.Line = fmt.Sprintf(format, args...)
 
 	if l.parent != nil {
-		l.parent.Write(item)
+		l.parent.Write(item, defaultWriterOnly)
 		return
 	}
 
-	l.Write(item)
+	l.Write(item, defaultWriterOnly)
 }
 
 // Write sends an Item to the level writers.
-func (l *Logger) Write(item sparalog.Item) {
+func (l *Logger) Write(item sparalog.Item, defaultWriterOnly bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
-	for _, w := range l.writers[item.Level] {
+	if defaultWriterOnly {
+		w, ok := l.writers[item.Level][defaultWriterID]
+		if ok {
+			w.Write(item)
+		}
+
+		return
+	}
+
+	for id, w := range l.writers[item.Level] {
 		if w == nil {
 			continue
 		}
 
-		w.Write(item)
+		err := w.Write(item)
+
+		if err != nil && id != defaultWriterID {
+			l.writersErrorFeedback <- err
+		}
 	}
 }
 
 func (l *Logger) init(tag string, defaultWriter sparalog.Writer) {
 	l.tag = tag
 
+	l.writersErrorFeedback = make(chan sparalog.WriterError, 64)
+
 	l.EnableStacktrace(sparalog.FatalLevel, true)
 
 	if l.parent == nil {
-		l.ResetAllWriters(defaultWriter)
+		l.ResetWriters(defaultWriter)
 	}
+
+	l.startErrorFeedbackWatcher()
 
 	// For non default loggers only, because is not called after main termination.
 	runtime.SetFinalizer(l, finalizeLogger)
 }
 
+func (l *Logger) startErrorFeedbackWatcher() {
+	l.writersFeedbackWG.Add(1)
+
+	go func() {
+		for item := range l.writersErrorFeedback {
+			l.Log(item.Level, item.StackTrace, true, item.Line)
+		}
+
+		l.writersFeedbackWG.Done()
+	}()
+}
+
 // Close terminate loggers and all the writers.
 func (l *Logger) Close() {
 	l.mu.Lock()
-	defer l.mu.Unlock()
 
 	if l.closed {
+		l.mu.Unlock()
 		return
 	}
 	l.closed = true
+	l.mu.Unlock()
 
+	// Close and wait for writers feedback channel.
+	close(l.writersErrorFeedback)
+	waitTimeout(&l.writersFeedbackWG, time.Second*time.Duration(3))
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	// Close and wait for writers.
 	closedWw := make(map[sparalog.Writer]bool)
 
 	for level := range l.writers {
@@ -361,9 +423,29 @@ func (l *Logger) Close() {
 	}
 }
 
+// Wait for a WaitGroup with a timeout.
+// Returns false when timeouted.
+func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+	ch := make(chan struct{})
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	select {
+	case <-ch:
+		return true
+	case <-time.After(timeout):
+		return false
+	}
+}
+
 func finalizeLogger(l *Logger) {
 	l.Close()
 }
 
 // How many top calls to skip from the stack trace.
 var skipStackCalls = 5
+
+var defaultWriterID sparalog.WriterID = "0"

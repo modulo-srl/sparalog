@@ -7,6 +7,8 @@ import (
 )
 
 type sentryWriter struct {
+	templates.Writer
+
 	queue chan sparalog.Item
 
 	worker *templates.Worker
@@ -32,16 +34,20 @@ var sentryLevels = [sparalog.LevelsCount]sentry.Level{
 
 // Write enqueue an item and returns immediately,
 // or blocks while the internal queue is full.
-func (w *sentryWriter) Write(item sparalog.Item) {
+func (w *sentryWriter) Write(item sparalog.Item) sparalog.WriterError {
 	w.worker.Enqueue(item)
+	return nil
 }
 
-func (w *sentryWriter) ProcessQueueItem(item sparalog.Item) {
+func (w *sentryWriter) ProcessQueueItem(item sparalog.Item) sparalog.WriterError {
 	s := item.String(false, false)
+
 	sentry.WithScope(func(scope *sentry.Scope) {
 		scope.SetLevel(sentryLevels[item.Level])
 		sentry.CaptureMessage(s)
 	})
+
+	return nil
 }
 
 func (w *sentryWriter) Close() {

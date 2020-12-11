@@ -17,7 +17,8 @@ type Worker struct {
 
 // WorkerDoer is the interface that the writer should implements.
 type WorkerDoer interface {
-	ProcessQueueItem(sparalog.Item)
+	ProcessQueueItem(sparalog.Item) sparalog.WriterError
+	FeedbackError(sparalog.WriterError)
 }
 
 // NewWorker returns a new worker for the writer.
@@ -31,7 +32,10 @@ func NewWorker(wd WorkerDoer, queueSize int) *Worker {
 	w.queueWG.Add(1)
 	go func() {
 		for item := range w.queue {
-			w.doer.ProcessQueueItem(item)
+			err := w.doer.ProcessQueueItem(item)
+			if err != nil {
+				wd.FeedbackError(err)
+			}
 		}
 
 		w.queueWG.Done()
@@ -56,10 +60,12 @@ func (w *Worker) Close(timeoutSecs int) {
 // Returns false when timeouted.
 func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	ch := make(chan struct{})
+
 	go func() {
 		wg.Wait()
 		close(ch)
 	}()
+
 	select {
 	case <-ch:
 		return true

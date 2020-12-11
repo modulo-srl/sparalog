@@ -6,9 +6,12 @@ import (
 	"sync"
 
 	"github.com/modulo-srl/sparalog"
+	"github.com/modulo-srl/sparalog/writers/templates"
 )
 
 type stdoutWriter struct {
+	templates.Writer
+
 	mu sync.Mutex
 }
 
@@ -19,7 +22,7 @@ func NewStdoutWriter() sparalog.Writer {
 	return &w
 }
 
-func (w *stdoutWriter) Write(item sparalog.Item) {
+func (w *stdoutWriter) Write(item sparalog.Item) sparalog.WriterError {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -27,10 +30,11 @@ func (w *stdoutWriter) Write(item sparalog.Item) {
 
 	if item.Level <= sparalog.WarnLevel {
 		fmt.Fprintln(os.Stderr, s)
-		return
+		return nil
 	}
 
 	fmt.Println(s)
+	return nil
 }
 
 func (w *stdoutWriter) Close() {}
