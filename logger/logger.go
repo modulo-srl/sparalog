@@ -165,6 +165,26 @@ func (l *Logger) ResetLevelWriters(level sparalog.Level, defaultW sparalog.Write
 	l.writers[level] = ww
 }
 
+// ResetLevelsWriters remove specific levels writers and reset to an optional default writer.
+func (l *Logger) ResetLevelsWriters(levels []sparalog.Level, defaultW sparalog.Writer) {
+	if l.parent != nil {
+		return
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	ww := make(map[sparalog.WriterID]sparalog.Writer, 4)
+
+	if defaultW != nil {
+		ww[defaultWriterID] = defaultW
+	}
+
+	for level := range levels {
+		l.writers[level] = ww
+	}
+}
+
 // AddWriter add a writer to all levels.
 // id is optional, but useful for RemoveWriter().
 func (l *Logger) AddWriter(w sparalog.Writer, id sparalog.WriterID) {

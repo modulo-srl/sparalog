@@ -110,6 +110,11 @@ func ResetLevelWriters(level sparalog.Level, defaultW sparalog.Writer) {
 	Default.ResetLevelWriters(level, defaultW)
 }
 
+// ResetLevelsWriters remove specific levels writers and reset to an optional default writer.
+func ResetLevelsWriters(levels []sparalog.Level, defaultW sparalog.Writer) {
+	Default.ResetLevelsWriters(levels, defaultW)
+}
+
 // AddWriter add a writer to all levels.
 // id is optional, but useful for RemoveWriter().
 func AddWriter(w sparalog.Writer, id sparalog.WriterID) {

@@ -1,5 +1,4 @@
 ## TODO
-- Readme
 
 ### Tests
 - TestGoroutinePanic() uses StartPanicWatcher() that is incompatible with multiple tests.  

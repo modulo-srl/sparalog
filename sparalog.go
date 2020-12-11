@@ -23,6 +23,7 @@ type Logger interface {
 
 	ResetWriters(Writer)
 	ResetLevelWriters(Level, Writer)
+	ResetLevelsWriters([]Level, Writer)
 	AddWriter(Writer, WriterID)
 	AddLevelWriter(Level, Writer, WriterID)
 	AddLevelsWriter([]Level, Writer, WriterID)
