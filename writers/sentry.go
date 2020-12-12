@@ -15,12 +15,12 @@ type sentryWriter struct {
 }
 
 // NewSentryWriter returns a sentryWriter.
-func NewSentryWriter() (sparalog.Writer, error) {
+func NewSentryWriter() sparalog.Writer {
 	w := sentryWriter{}
 
 	w.worker = templates.NewWorker(&w, 100)
 
-	return &w, nil
+	return &w
 }
 
 var sentryLevels = [sparalog.LevelsCount]sentry.Level{

@@ -22,7 +22,7 @@ type telegramWriter struct {
 }
 
 // NewTelegramWriter returns a telegramWriter.
-func NewTelegramWriter(botAPIKey string, channelID int) (sparalog.Writer, error) {
+func NewTelegramWriter(botAPIKey string, channelID int) sparalog.Writer {
 	w := telegramWriter{
 		apiKey:    botAPIKey,
 		channelID: channelID,
@@ -30,7 +30,7 @@ func NewTelegramWriter(botAPIKey string, channelID int) (sparalog.Writer, error)
 
 	w.worker = templates.NewWorker(&w, 100)
 
-	return &w, nil
+	return &w
 }
 
 // Write enqueue an item and returns immediately,

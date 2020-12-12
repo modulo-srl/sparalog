@@ -27,7 +27,7 @@ func NewChildLogger(tag string) sparalog.Logger {
 		return nil
 	}
 
-	return logger.NewChild(nil, tag)
+	return logger.NewChild(Default, tag)
 }
 
 // Fatalf sends to Default logger fatal stream using the same fmt.Printf() interface.
