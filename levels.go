@@ -37,6 +37,12 @@ var Levels = [LevelsCount]Level{
 	TraceLevel,
 }
 
+// CriticalLevels lists critical levels.
+var CriticalLevels = []Level{FatalLevel, ErrorLevel, WarnLevel}
+
+// DebugLevels lists debugging purpose levels.
+var DebugLevels = []Level{DebugLevel, TraceLevel}
+
 // LevelsString is a constant of all logging levels names.
 var LevelsString = [LevelsCount]string{
 	"fatal", "error", "warning", "info", "debug", "trace",

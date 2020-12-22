@@ -15,6 +15,8 @@ type Context struct {
 	prefixTags []string
 }
 
+// SetPrefix change the prefix for the context.
+// Tags contains the list of tags names used as params for format.
 func (c *Context) SetPrefix(format string, tags []string) {
 	c.prefixFmt = format
 	c.prefixTags = tags
@@ -55,6 +57,7 @@ func (c *Context) AssignContext(fromCtx sparalog.Context, clone bool) {
 	}
 }
 
+// SetTag changes a specific tag.
 func (c *Context) SetTag(name, value string) {
 	if c.tags == nil {
 		c.tags = make(map[string]string)
@@ -63,10 +66,12 @@ func (c *Context) SetTag(name, value string) {
 	c.tags[name] = value
 }
 
+// Tags returns all the tags.
 func (c *Context) Tags() map[string]string {
 	return c.tags
 }
 
+// SetData changes a specific data field.
 func (c *Context) SetData(key string, value interface{}) {
 	if c.data == nil {
 		c.data = make(map[string]interface{})
@@ -75,20 +80,23 @@ func (c *Context) SetData(key string, value interface{}) {
 	c.data[key] = value
 }
 
+// Data returns all the data fields.
 func (c *Context) Data() map[string]interface{} {
 	return c.data
 }
 
-func (c *Context) Prefix() (string, []string) {
+// Prefix returns the prefix format and tags names.
+func (c *Context) Prefix() (format string, tags []string) {
 	return c.prefixFmt, c.prefixTags
 }
 
+// RenderPrefix returns a prefix as rendered string.
 func (c *Context) RenderPrefix() string {
 	if c.prefixFmt == "" {
 		return ""
 	}
 
-	if len(c.prefixTags) == 0 || len(c.tags) == 0 {
+	if len(c.prefixTags) == 0 {
 		return c.prefixFmt
 	}
 
