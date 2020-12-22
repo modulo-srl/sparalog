@@ -80,8 +80,8 @@ func main() {
 
 #### Misc
 ```go
-    // Enable stack tracke for error level.
-    EnableStacktrace(sparalog.ErrorLevel, true)
+    // Enable stack tracke for warning level.
+    EnableStacktrace(sparalog.WarnLevel, true)
 
     ...
 

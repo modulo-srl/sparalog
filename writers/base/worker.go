@@ -1,4 +1,4 @@
-package templates
+package base
 
 import (
 	"sync"
@@ -17,8 +17,8 @@ type Worker struct {
 
 // WorkerDoer is the interface that the writer should implements.
 type WorkerDoer interface {
-	ProcessQueueItem(sparalog.Item) sparalog.WriterError
-	FeedbackError(sparalog.WriterError)
+	ProcessQueueItem(sparalog.Item)
+	FeedbackItem(sparalog.Item)
 }
 
 // NewWorker returns a new worker for the writer.
@@ -32,10 +32,7 @@ func NewWorker(wd WorkerDoer, queueSize int) *Worker {
 	w.queueWG.Add(1)
 	go func() {
 		for item := range w.queue {
-			err := w.doer.ProcessQueueItem(item)
-			if err != nil {
-				wd.FeedbackError(err)
-			}
+			w.doer.ProcessQueueItem(item)
 		}
 
 		w.queueWG.Done()

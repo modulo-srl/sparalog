@@ -1,49 +1,50 @@
 package sparalog
 
-import "time"
-
 // Item is the single item of log.
-type Item struct {
-	Timestamp time.Time
-	Level     Level
-	Tag       string
+type Item interface {
+	Context
 
-	Line string
+	Level() Level
 
-	StackTrace string
+	Line() string
+	SetLine(string)
+
+	StackTrace() string
+	GenerateStackTrace(callsToSkip int)
+	SetStackTrace(string)
+
+	UpdateFingerprint(args ...interface{})
+
+	ToString(timestamp, level bool) string
+
+	Log()
+
+	// Internal domain functions - should not be used out of this library.
+
+	Fingerprint() string
+
+	SetLogger(ItemLogger)
 }
 
-func (i Item) String(timestamp, level bool) string {
-	var s string
-	var prefixed bool
+// ItemLogger used by Item.SetLogger(), Item.Log().
+type ItemLogger interface {
+	LogItem(Item)
+}
 
-	if timestamp {
-		s = time.Now().UTC().Format("2006-01-02 15:04:05.000") + " "
-	}
+// Context defines the interface for contextualized logging data.
+type Context interface {
+	SetTag(string, string)
+	SetData(string, interface{})
+	SetPrefix(format string, tags []string)
 
-	if level {
-		s += LevelsString[i.Level]
-		prefixed = true
-	}
+	// Internal domain functions - should not be used out of this library.
 
-	if i.Tag != "" {
-		if prefixed {
-			s += " "
-		}
+	AssignContext(Context, bool)
 
-		s += "[" + i.Tag + "]"
-		prefixed = true
-	}
+	Tags() map[string]string
+	Data() map[string]interface{}
 
-	if prefixed {
-		s += ": "
-	}
+	Prefix() (string, []string)
 
-	s += i.Line
-
-	if i.StackTrace != "" {
-		s += "\n" + i.StackTrace + "\n" // add extra blank line
-	}
-
-	return s
+	RenderPrefix() string
 }

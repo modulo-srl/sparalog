@@ -14,8 +14,8 @@ func TestMainPanic(t *testing.T) {
 
 	w := logs.NewCallbackWriter(
 		func(item sparalog.Item) error {
-			if item.Level == sparalog.FatalLevel {
-				os.Exit(1)
+			if item.Level() == sparalog.FatalLevel {
+				os.Exit(0)
 			}
 			return nil
 		},
@@ -32,16 +32,17 @@ func TestMainPanic(t *testing.T) {
 	defer logs.Done()
 
 	w := logs.NewCallbackWriter(
-		func(item sparalog.Item) {
-			if item.Level == sparalog.FatalLevel {
+		func(item sparalog.Item) error {
+			if item.Level() == sparalog.FatalLevel {
 				// Received by the parent process,
 				// that should exits shortly (see logger.Fatal()),
 				// so change the exit code to success.
 				sparalog.FatalExitCode = 0
 			}
+			return nil
 		},
 	)
-	logs.ResetAllWriters(w)
+	logs.ResetWriters(w)
 
 	logs.StartPanicWatcher()
 

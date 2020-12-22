@@ -3,22 +3,22 @@ package writers
 import (
 	"github.com/getsentry/sentry-go"
 	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/writers/templates"
+	"github.com/modulo-srl/sparalog/writers/base"
 )
 
 type sentryWriter struct {
-	templates.Writer
+	base.Writer
 
 	queue chan sparalog.Item
 
-	worker *templates.Worker
+	worker *base.Worker
 }
 
 // NewSentryWriter returns a sentryWriter.
 func NewSentryWriter() sparalog.Writer {
 	w := sentryWriter{}
 
-	w.worker = templates.NewWorker(&w, 100)
+	w.worker = base.NewWorker(&w, 100)
 
 	return &w
 }
@@ -34,20 +34,23 @@ var sentryLevels = [sparalog.LevelsCount]sentry.Level{
 
 // Write enqueue an item and returns immediately,
 // or blocks while the internal queue is full.
-func (w *sentryWriter) Write(item sparalog.Item) sparalog.WriterError {
+func (w *sentryWriter) Write(item sparalog.Item) {
 	w.worker.Enqueue(item)
-	return nil
 }
 
-func (w *sentryWriter) ProcessQueueItem(item sparalog.Item) sparalog.WriterError {
-	s := item.String(false, false)
+func (w *sentryWriter) ProcessQueueItem(item sparalog.Item) {
+	s := item.ToString(false, false)
 
 	sentry.WithScope(func(scope *sentry.Scope) {
-		scope.SetLevel(sentryLevels[item.Level])
-		sentry.CaptureMessage(s)
-	})
+		scope.SetLevel(sentryLevels[item.Level()])
 
-	return nil
+		scope.SetTags(item.Tags())
+		scope.SetContexts(item.Data())
+
+		sentry.CaptureMessage(s)
+
+		scope.SetFingerprint([]string{item.Fingerprint()})
+	})
 }
 
 func (w *sentryWriter) Close() {

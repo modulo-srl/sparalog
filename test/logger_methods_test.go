@@ -14,7 +14,7 @@ func TestRootLoggerMethods(t *testing.T) {
 
 	w := logs.NewCallbackWriter(
 		func(item sparalog.Item) error {
-			traced = item.String(false, true)
+			traced = item.ToString(false, true)
 			return nil
 		},
 	)
@@ -41,7 +41,7 @@ func TestRootLoggerMethods(t *testing.T) {
 	logs.Default.Info("asd")
 	traced2 = traced
 	if traced1 != traced2 {
-		t.Fatal("Warn() not same")
+		t.Fatal("Info() not same")
 	}
 
 	logs.Debug("asd")
@@ -49,7 +49,7 @@ func TestRootLoggerMethods(t *testing.T) {
 	logs.Default.Debug("asd")
 	traced2 = traced
 	if traced1 != traced2 {
-		t.Fatal("Warn() not same")
+		t.Fatal("Debug() not same")
 	}
 
 	logs.Trace("asd")
@@ -57,7 +57,7 @@ func TestRootLoggerMethods(t *testing.T) {
 	logs.Default.Trace("asd")
 	traced2 = traced
 	if traced1 != traced2 {
-		t.Fatal("Warn() not same")
+		t.Fatal("Trace() not same")
 	}
 
 	logs.Print("asd")
@@ -65,6 +65,6 @@ func TestRootLoggerMethods(t *testing.T) {
 	logs.Default.Print("asd")
 	traced2 = traced
 	if traced1 != traced2 {
-		t.Fatal("Warn() not same")
+		t.Fatal("Print() not same")
 	}
 }

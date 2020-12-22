@@ -25,7 +25,7 @@ func GoroutineID() string {
 func StackTrace(skip int) string {
 	const maxStackLength = 50
 	stackBuf := make([]uintptr, maxStackLength)
-	length := runtime.Callers(skip, stackBuf[:])
+	length := runtime.Callers(skip+2, stackBuf[:])
 	stack := stackBuf[:length]
 
 	trace := "STACKTRACE: goroutine #" + GoroutineID()

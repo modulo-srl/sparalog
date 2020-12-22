@@ -7,11 +7,12 @@ import (
 	"sync"
 
 	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/writers/templates"
+	"github.com/modulo-srl/sparalog/item"
+	"github.com/modulo-srl/sparalog/writers/base"
 )
 
 type callbackWriter struct {
-	templates.Writer
+	base.Writer
 
 	mu sync.Mutex
 
@@ -30,24 +31,23 @@ func NewCallbackWriter(callback CallbackWriterCallback) sparalog.Writer {
 	return &w
 }
 
-func (w *callbackWriter) Write(item sparalog.Item) sparalog.WriterError {
+func (w *callbackWriter) Write(i sparalog.Item) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	err := w.callback(item)
+	err := w.callback(i)
 	if err != nil {
-		return w.ErrorItem(err)
+		w.FeedbackItem(item.NewError(1, err))
+		return
 	}
-
-	return nil
 }
 
 func (w *callbackWriter) Close() {}
 
 type callbackAsyncWriter struct {
-	templates.Writer
+	base.Writer
 
-	worker *templates.Worker
+	worker *base.Worker
 
 	callback CallbackWriterCallback
 }
@@ -58,7 +58,7 @@ func NewCallbackAsyncWriter(callback CallbackWriterCallback) sparalog.Writer {
 		callback: callback,
 	}
 
-	w.worker = templates.NewWorker(&w, 100)
+	w.worker = base.NewWorker(&w, 100)
 
 	return &w
 }
@@ -67,16 +67,13 @@ func (w *callbackAsyncWriter) Close() {
 	w.worker.Close(1)
 }
 
-func (w *callbackAsyncWriter) Write(item sparalog.Item) sparalog.WriterError {
+func (w *callbackAsyncWriter) Write(item sparalog.Item) {
 	w.worker.Enqueue(item)
-	return nil
 }
 
-func (w *callbackAsyncWriter) ProcessQueueItem(item sparalog.Item) sparalog.WriterError {
-	err := w.callback(item)
+func (w *callbackAsyncWriter) ProcessQueueItem(i sparalog.Item) {
+	err := w.callback(i)
 	if err != nil {
-		return w.ErrorItem(err)
+		w.FeedbackItem(item.NewError(1, err))
 	}
-
-	return nil
 }

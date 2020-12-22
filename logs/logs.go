@@ -1,5 +1,6 @@
 package logs
 
+// Logging domain controller.
 // See root package for the model and interfaces.
 
 import (
@@ -10,11 +11,15 @@ import (
 
 	"github.com/modulo-srl/sparalog"
 	"github.com/modulo-srl/sparalog/env"
+	"github.com/modulo-srl/sparalog/logger"
 	"github.com/modulo-srl/sparalog/writers"
 )
 
 // Default is the default global logger.
 var Default sparalog.Logger
+
+// DefaultDispatcher is the default global dispatcher.
+var DefaultDispatcher sparalog.Dispatcher
 
 // DefaultStdoutWriter is the default global writer to stdout.
 var DefaultStdoutWriter sparalog.Writer
@@ -22,12 +27,18 @@ var DefaultStdoutWriter sparalog.Writer
 // Init initialize the library - it should be called at main start.
 // programName = program name and version.
 func Init(programName string) {
+	if Default != nil {
+		return
+	}
+	closed = false
+
 	env.Init(programName)
 
 	loggers = make([]sparalog.Logger, 0, 1)
 
 	DefaultStdoutWriter = writers.NewStdoutWriter()
-	Default = NewLogger("")
+	Default = NewLogger()
+	DefaultDispatcher = Default.(*logger.Logger).Dispatcher
 }
 
 // StartPanicWatcher starts a supervisor that monitors panics in all goroutines.
@@ -70,6 +81,10 @@ func Done() {
 	for _, l := range loggers {
 		l.Close()
 	}
+
+	Default = nil
+	DefaultDispatcher = nil
+	DefaultStdoutWriter = nil
 }
 
 var loggers []sparalog.Logger
@@ -86,5 +101,7 @@ func panicHandler(output string) {
 		output = output[:i]
 	}
 
-	Default.FatalTrace(st, output)
+	item := Default.NewItem(sparalog.FatalLevel, output)
+	item.SetStackTrace(st)
+	item.Log()
 }

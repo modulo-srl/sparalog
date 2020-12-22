@@ -6,10 +6,11 @@ type Level int
 // Logging levels.
 const (
 	// FatalLevel - Shutdown of the service or application to prevent data loss (or firther data loss). Wake up the SysAdmin!
-	// Stacktrace enabled by default.
+	// Stack trace enabled by default.
 	FatalLevel Level = iota
 	// ErrorLevel - Any error which is fatal to the operation, but not the service or application (can't open a required file, missing data, incorrect connection strings, missing services, etc.).
 	// SysAdmin should be notified automatically, but doesn't need to be dragged out of bed.
+	// Stack trace enabled by default.
 	ErrorLevel
 	// WarnLevel - Anything that can potentially cause application oddities, but automatically recovered.
 	WarnLevel
@@ -17,8 +18,10 @@ const (
 	// Should be the out-of-the-box level.
 	InfoLevel
 	// DebugLevel - Usually enabled only when debugging. Very verbose logging.
+	// Muted by default.
 	DebugLevel
 	// TraceLevel - For tracing the code and trying to find one part of a function specifically.
+	// Muted by default.
 	TraceLevel
 
 	LevelsCount

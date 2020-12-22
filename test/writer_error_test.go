@@ -19,13 +19,12 @@ func TestWriterError(t *testing.T) {
 	// Default writer.
 	ws := logs.NewCallbackWriter(
 		func(item sparalog.Item) error {
-			fmt.Println(item.String(true, true))
+			fmt.Println(item.ToString(true, true))
 			forwardLoggeds++
 			return nil
 		},
 	)
 	logs.ResetLevelWriters(sparalog.ErrorLevel, ws)
-	logs.EnableStacktrace(sparalog.ErrorLevel, true)
 
 	wa := logs.NewCallbackWriter(
 		func(item sparalog.Item) error {
@@ -55,13 +54,13 @@ func TestAsyncWriterError(t *testing.T) {
 	// Default writer.
 	ws := logs.NewCallbackAsyncWriter(
 		func(item sparalog.Item) error {
-			fmt.Println(item.String(true, true))
+			fmt.Println("*** CATCHED! ***")
+			fmt.Println(item.ToString(true, true))
 			forwardLoggeds++
 			return nil
 		},
 	)
 	logs.ResetLevelWriters(sparalog.ErrorLevel, ws)
-	logs.EnableStacktrace(sparalog.ErrorLevel, true)
 
 	wa := logs.NewCallbackAsyncWriter(
 		func(item sparalog.Item) error {
@@ -70,7 +69,7 @@ func TestAsyncWriterError(t *testing.T) {
 	)
 	logs.AddWriter(wa, "")
 
-	logs.Info("test writer error")
+	logs.Info("test async writer error")
 
 	time.Sleep(time.Second) // assure writers forward channel processing.
 

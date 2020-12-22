@@ -1,5 +1,7 @@
 package logs
 
+// Writers constructors wrapper.
+
 import (
 	"github.com/modulo-srl/sparalog"
 	"github.com/modulo-srl/sparalog/writers"

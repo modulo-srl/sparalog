@@ -9,16 +9,17 @@ import (
 
 	"github.com/modulo-srl/sparalog"
 	"github.com/modulo-srl/sparalog/env"
-	"github.com/modulo-srl/sparalog/writers/templates"
+	"github.com/modulo-srl/sparalog/item"
+	"github.com/modulo-srl/sparalog/writers/base"
 )
 
 type telegramWriter struct {
-	templates.Writer
+	base.Writer
 
 	apiKey    string
 	channelID int
 
-	worker *templates.Worker
+	worker *base.Worker
 }
 
 // NewTelegramWriter returns a telegramWriter.
@@ -28,43 +29,40 @@ func NewTelegramWriter(botAPIKey string, channelID int) sparalog.Writer {
 		channelID: channelID,
 	}
 
-	w.worker = templates.NewWorker(&w, 100)
+	w.worker = base.NewWorker(&w, 100)
 
 	return &w
 }
 
 // Write enqueue an item and returns immediately,
 // or blocks while the internal queue is full.
-func (w *telegramWriter) Write(item sparalog.Item) sparalog.WriterError {
+func (w *telegramWriter) Write(item sparalog.Item) {
 	w.worker.Enqueue(item)
-	return nil
 }
 
 func (w *telegramWriter) Close() {
 	w.worker.Close(3)
 }
 
-func (w *telegramWriter) ProcessQueueItem(item sparalog.Item) sparalog.WriterError {
+func (w *telegramWriter) ProcessQueueItem(i sparalog.Item) {
 	var s string
 
 	prog, host := env.Device()
 
-	s = sparalog.LevelsIcons[item.Level] + " " +
+	s = sparalog.LevelsIcons[i.Level()] + " " +
 		prog + "<i>[ " + host + " ]</i>" + "\n\n" +
-		"<b>" + item.Line + "</b>\n"
+		"<b>" + i.Line() + "</b>\n"
 
-	if item.StackTrace != "" {
-		s += "\n<pre>" + item.StackTrace + "</pre>\n"
+	if i.StackTrace() != "" {
+		s += "\n<pre>" + i.StackTrace() + "</pre>\n"
 	}
 
 	s += "\n" + env.Runtime()
 
 	err := w.sendMessage(s)
 	if err != nil {
-		return w.ErrorItem(err)
+		w.FeedbackItem(item.NewError(1, err))
 	}
-
-	return nil
 }
 
 type telegramReq struct {
