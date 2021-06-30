@@ -43,7 +43,7 @@ func (d *Dispatcher) ResetLevelWriters(level sparalog.Level, defaultW sparalog.W
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ww := make(map[sparalog.WriterID]sparalog.Writer, 4)
+	ww := make(map[sparalog.WriterID]sparalog.Writer)
 
 	if defaultW != nil {
 		ww[defaultWriterID] = defaultW
@@ -57,13 +57,13 @@ func (d *Dispatcher) ResetLevelsWriters(levels []sparalog.Level, defaultW sparal
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ww := make(map[sparalog.WriterID]sparalog.Writer, 4)
-
-	if defaultW != nil {
-		ww[defaultWriterID] = defaultW
-	}
-
 	for _, level := range levels {
+		ww := make(map[sparalog.WriterID]sparalog.Writer)
+
+		if defaultW != nil {
+			ww[defaultWriterID] = defaultW
+		}
+
 		d.writers[level] = ww
 	}
 }
