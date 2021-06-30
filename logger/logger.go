@@ -252,6 +252,7 @@ func (l *Logger) LogItem(item sparalog.Item) {
 	l.Dispatcher.Dispatch(item)
 }
 
+// CloneContext returns a clone of the current context.
 func (l *Logger) CloneContext() sparalog.Context {
 	l.muCtx.RLock()
 	defer l.muCtx.RUnlock()
@@ -272,7 +273,7 @@ func (l *Logger) initDispatcher(defaultWriter sparalog.Writer) {
 	l.Dispatcher.Mute(sparalog.TraceLevel, true)
 }
 
-// Close terminate loggers and all the writers.
+// Close terminates loggers and all the writers.
 func (l *Logger) Close() {
 	l.Dispatcher.Close()
 }

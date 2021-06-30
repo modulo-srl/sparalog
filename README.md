@@ -1,15 +1,17 @@
 # Sparalog
+
 Logging with independent streaming levels.
 
-![](https://tinyurl.com/yxkm7lyh)
+![logger and writers diagram](https://tinyurl.com/yxkm7lyh)
 
-### Features
+## Features
+
 * One logger, multiple writers for every logging level.
 * Thread safe.
 * Light and tested.
 * Logs panics from all goroutines without defer.
 
-### Usage
+## Usage
 
 ```go
 import "github.com/modulo-srl/sparalog/logs"
@@ -26,7 +28,8 @@ func main() {
 }
 ```
 
-#### Multiple writers
+### Multiple writers
+
 ```go
     logs.Init("my app v1.0")
     defer logs.Done()
@@ -41,7 +44,7 @@ func main() {
     ws := logs.NewSentryWriter()
 
     logs.AddLevelsWriter(
-    	[]sparalog.Level{
+        []sparalog.Level{
             sparalog.FatalLevel, sparalog.ErrorLevel, sparalog.WarnLevel,
         },
         ws, "",
@@ -55,7 +58,8 @@ func main() {
 
 ```
 
-#### Panics watcher
+### Panics watcher
+
 ```go
     logs.Init("my app v1.0")
     defer logs.Done()
@@ -78,7 +82,8 @@ func main() {
     }()
 ```
 
-#### Misc
+### Misc
+
 ```go
     // Enable stack tracke for warning level.
     EnableStacktrace(sparalog.WarnLevel, true)
@@ -92,7 +97,8 @@ func main() {
 
 ```
 
-#### Child loggers
+### Child loggers
+
 ```go
     type module struct {
         log sparalog.Logger
@@ -110,9 +116,9 @@ func main() {
     }    
 ```
 
-### Notes
-- Writers internal errors are redirected to the default writer.
+## Notes
 
+* Writers internal errors are redirected to the default writer.
 
 ---
 *Copyright 2020 [Modulo srl](http://www.modulo.srl) - Licensed under the MIT license*

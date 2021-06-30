@@ -145,6 +145,7 @@ func (d *Dispatcher) Dispatch(item sparalog.Item) {
 	d.write(item, false)
 }
 
+// write writes an item using the level writers or the default writer.
 func (d *Dispatcher) write(item sparalog.Item, defaultWriterOnly bool) {
 	level := item.Level()
 

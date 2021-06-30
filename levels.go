@@ -5,10 +5,12 @@ type Level int
 
 // Logging levels.
 const (
-	// FatalLevel - Shutdown of the service or application to prevent data loss (or firther data loss). Wake up the SysAdmin!
+	// FatalLevel - Shutdown of the service or application to prevent data loss (or further data loss).
+	// Wake up the SysAdmin!
 	// Stack trace enabled by default.
 	FatalLevel Level = iota
-	// ErrorLevel - Any error which is fatal to the operation, but not the service or application (can't open a required file, missing data, incorrect connection strings, missing services, etc.).
+	// ErrorLevel - Any error which is fatal to the operation, but not the service or application
+	// (can't open a required file, missing data, incorrect connection strings, missing services, etc.).
 	// SysAdmin should be notified automatically, but doesn't need to be dragged out of bed.
 	// Stack trace enabled by default.
 	ErrorLevel
