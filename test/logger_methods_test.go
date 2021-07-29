@@ -1,6 +1,7 @@
 package test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/modulo-srl/sparalog"
@@ -12,9 +13,12 @@ func TestRootLoggerMethods(t *testing.T) {
 
 	var traced string
 
+	// regex per normalizzare lo stack trace, altrimenti i numeri riga non corrispondono.
+	re := regexp.MustCompile(`logger_methods_test.go:[0-9]+`)
 	w := logs.NewCallbackWriter(
 		func(item sparalog.Item) error {
 			traced = item.ToString(false, true)
+			traced = re.ReplaceAllString(traced, "logger_methods_test.go:XX")
 			return nil
 		},
 	)

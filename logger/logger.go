@@ -197,7 +197,7 @@ func (l *Logger) SetContextPrefix(format string, tags []string) {
 // stackTrace: custom stacktrace; "" = generate here according to level settings.
 func (l *Logger) prelogItem(level sparalog.Level, stackTrace string) sparalog.Item {
 	state := l.Dispatcher.LevelState(level)
-	if state.Muted {
+	if state.Muted || state.NoWriters {
 		return nil
 	}
 
@@ -241,7 +241,7 @@ func (l *Logger) Logf(level sparalog.Level, stackTrace string, format string, ar
 // LogItem logs an item to level stream - thread safe.
 func (l *Logger) LogItem(item sparalog.Item) {
 	state := l.Dispatcher.LevelState(item.Level())
-	if state.Muted {
+	if state.Muted || state.NoWriters {
 		return
 	}
 

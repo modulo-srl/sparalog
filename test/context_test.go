@@ -12,9 +12,11 @@ import (
 	"github.com/modulo-srl/sparalog/logs"
 )
 
+// TODO
 func TestContextData(t *testing.T) {
 }
 
+// TODO
 func TestContextTags(t *testing.T) {
 	defer logs.Done()
 	logs.Init("sparalog-test")
@@ -34,6 +36,7 @@ func TestContextTags(t *testing.T) {
 	//os.Exit(1)
 }
 
+// TODO
 func TestPrefix(t *testing.T) {
 }
 
@@ -58,6 +61,7 @@ func TestFingerprint(t *testing.T) {
 	}
 }
 
+// TODO
 func TestContextPrefix(t *testing.T) {
 	defer logs.Done()
 	logs.Init("sparalog-test")

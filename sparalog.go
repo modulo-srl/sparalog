@@ -110,6 +110,7 @@ type Dispatcher interface {
 type LevelState struct {
 	Muted      bool
 	Stacktrace bool
+	NoWriters  bool
 }
 
 // Writer is the writer used by the Logger for one or more log levels.

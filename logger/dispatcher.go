@@ -50,6 +50,8 @@ func (d *Dispatcher) ResetLevelWriters(level sparalog.Level, defaultW sparalog.W
 	}
 
 	d.writers[level] = ww
+
+	d.levState[level].NoWriters = (defaultW == nil)
 }
 
 // ResetLevelsWriters remove specific levels writers and reset to an optional default writer.
@@ -65,14 +67,17 @@ func (d *Dispatcher) ResetLevelsWriters(levels []sparalog.Level, defaultW sparal
 		}
 
 		d.writers[level] = ww
+
+		d.levState[level].NoWriters = (defaultW == nil)
 	}
 }
 
 // AddWriter add a writer to all levels.
 // id is optional, but useful for RemoveWriter().
 func (d *Dispatcher) AddWriter(w sparalog.Writer, id sparalog.WriterID) {
-	for i := 0; i < int(sparalog.LevelsCount); i++ {
-		d.AddLevelWriter(sparalog.Level(i), w, id)
+	for level := 0; level < int(sparalog.LevelsCount); level++ {
+		d.AddLevelWriter(sparalog.Level(level), w, id)
+		d.levState[level].NoWriters = false
 	}
 }
 
@@ -87,6 +92,8 @@ func (d *Dispatcher) AddLevelWriter(level sparalog.Level, w sparalog.Writer, id 
 	}
 
 	d.writers[level][id] = w
+
+	d.levState[level].NoWriters = false
 
 	if id != defaultWriterID {
 		w.SetFeedbackChan(d.writersFeedback)
@@ -105,6 +112,8 @@ func (d *Dispatcher) AddLevelsWriter(levels []sparalog.Level, w sparalog.Writer,
 		}
 
 		d.writers[level][id] = w
+
+		d.levState[level].NoWriters = false
 	}
 
 	if id != defaultWriterID {
@@ -122,6 +131,14 @@ func (d *Dispatcher) RemoveWriter(level sparalog.Level, id sparalog.WriterID) {
 	defer d.mu.Unlock()
 
 	delete(d.writers[level], id)
+
+	d.levState[level].NoWriters = true
+	for _, w := range d.writers[level] {
+		if w != nil {
+			d.levState[level].NoWriters = false
+			break
+		}
+	}
 }
 
 // Mute mute/unmute a specific level.
