@@ -29,6 +29,11 @@ func NewWorker(wd WorkerDoer, queueSize int) *Worker {
 
 	w.queue = make(chan sparalog.Item, queueSize)
 
+	return &w
+}
+
+// Start the worker.
+func (w *Worker) Start() {
 	w.queueWG.Add(1)
 	go func() {
 		for item := range w.queue {
@@ -37,8 +42,6 @@ func NewWorker(wd WorkerDoer, queueSize int) *Worker {
 
 		w.queueWG.Done()
 	}()
-
-	return &w
 }
 
 // Enqueue an item and returns immediately,
@@ -47,26 +50,19 @@ func (w *Worker) Enqueue(item sparalog.Item) {
 	w.queue <- item
 }
 
-// Close the queue and wait for in-progress items.
-func (w *Worker) Close(timeoutSecs int) {
+// Stop the queue and wait for in-progress items.
+func (w *Worker) Stop(timeoutSecs int) {
 	close(w.queue)
-	waitTimeout(&w.queueWG, time.Second*time.Duration(timeoutSecs))
-}
 
-// Wait for a WaitGroup with a timeout.
-// Returns false when timeouted.
-func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	ch := make(chan struct{})
 
 	go func() {
-		wg.Wait()
+		w.queueWG.Wait()
 		close(ch)
 	}()
 
 	select {
 	case <-ch:
-		return true
-	case <-time.After(timeout):
-		return false
+	case <-time.After(time.Second * time.Duration(timeoutSecs)):
 	}
 }

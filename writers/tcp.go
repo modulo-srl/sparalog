@@ -17,6 +17,9 @@ type tcpWriter struct {
 
 	stateCb StateChangeCallback
 
+	address string
+	port    int
+
 	listener net.Listener
 	quitCh   chan bool
 	//connsWG  sync.WaitGroup
@@ -38,19 +41,14 @@ func NewTCPWriter(address string, port int, debug bool, cb StateChangeCallback) 
 
 	w := tcpWriter{
 		debug:   debug,
+		address: address,
+		port:    port,
 		stateCb: cb,
 		quitCh:  make(chan bool),
 		conns:   make(map[int]net.Conn, 4),
 	}
 
 	w.worker = base.NewWorker(&w, 100)
-
-	err := w.startServer(address, port)
-	if err != nil {
-		return nil, err
-	}
-
-	go w.serve()
 
 	return &w, nil
 }
@@ -76,8 +74,21 @@ func (w *tcpWriter) startServer(address string, port int) error {
 	return nil
 }
 
+func (w *tcpWriter) Open() error {
+	err := w.startServer(w.address, w.port)
+	if err != nil {
+		return err
+	}
+
+	go w.serve()
+
+	w.worker.Start()
+
+	return nil
+}
+
 func (w *tcpWriter) Close() {
-	w.worker.Close(1)
+	w.worker.Stop(1)
 
 	close(w.quitCh)
 	//w.connsWG.Wait()

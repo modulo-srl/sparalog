@@ -12,6 +12,9 @@ type Writer struct {
 	feedbackCh chan sparalog.Item
 }
 
+func (w *Writer) Open() error { return nil }
+func (w *Writer) Close()      {}
+
 // SetFeedbackChan set a channel to the level default writer of the logger.
 func (w *Writer) SetFeedbackChan(ch chan sparalog.Item) {
 	w.feedbackCh = ch

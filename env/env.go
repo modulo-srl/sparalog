@@ -69,8 +69,7 @@ func Runtime() string {
 var progName string
 var hostname string
 
-func Init(programName string) {
-	progName = programName
-
+func init() {
+	progName = os.Args[0]
 	hostname, _ = os.Hostname()
 }

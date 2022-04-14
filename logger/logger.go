@@ -273,9 +273,14 @@ func (l *Logger) initDispatcher(defaultWriter sparalog.Writer) {
 	l.Dispatcher.Mute(sparalog.TraceLevel, true)
 }
 
+// Open start loggers and all the writers.
+func (l *Logger) Open() error {
+	return l.Dispatcher.Start()
+}
+
 // Close terminates loggers and all the writers.
 func (l *Logger) Close() {
-	l.Dispatcher.Close()
+	l.Dispatcher.Stop()
 }
 
 var defaultWriterID sparalog.WriterID = "0"

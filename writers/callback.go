@@ -42,8 +42,6 @@ func (w *callbackWriter) Write(i sparalog.Item) {
 	}
 }
 
-func (w *callbackWriter) Close() {}
-
 type callbackAsyncWriter struct {
 	base.Writer
 
@@ -63,8 +61,13 @@ func NewCallbackAsyncWriter(callback CallbackWriterCallback) sparalog.Writer {
 	return &w
 }
 
+func (w *callbackAsyncWriter) Open() error {
+	w.worker.Start()
+	return nil
+}
+
 func (w *callbackAsyncWriter) Close() {
-	w.worker.Close(1)
+	w.worker.Stop(1)
 }
 
 func (w *callbackAsyncWriter) Write(item sparalog.Item) {

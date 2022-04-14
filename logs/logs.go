@@ -10,7 +10,6 @@ import (
 	"github.com/mitchellh/panicwrap"
 
 	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/env"
 	"github.com/modulo-srl/sparalog/logger"
 	"github.com/modulo-srl/sparalog/writers"
 )
@@ -23,23 +22,6 @@ var DefaultDispatcher sparalog.Dispatcher
 
 // DefaultStdoutWriter is the default global writer to stdout.
 var DefaultStdoutWriter sparalog.Writer
-
-// Init initialize the library - it should be called at main start.
-// programName = program name and version.
-func Init(programName string) {
-	if Default != nil {
-		return
-	}
-	closed = false
-
-	env.Init(programName)
-
-	loggers = make([]sparalog.Logger, 0, 1)
-
-	DefaultStdoutWriter = writers.NewStdoutWriter()
-	Default = NewLogger()
-	DefaultDispatcher = Default.(*logger.Logger).Dispatcher
-}
 
 // StartPanicWatcher starts a supervisor that monitors panics in all goroutines.
 // Since the supervision is made starting a parent + child processes:
@@ -62,6 +44,12 @@ func StartPanicWatcher() {
 
 	// Otherwise, exitStatus < 0 means we're the child. Continue executing as
 	// normal...
+}
+
+// Open start the logger an all the writers.
+// It should be called after writers initialization.
+func Open() {
+	Default.Open()
 }
 
 // Done manages (current routine) panics and closes all the loggers,
@@ -104,4 +92,18 @@ func panicHandler(output string) {
 	item := Default.NewItem(sparalog.FatalLevel, output)
 	item.SetStackTrace(st)
 	item.Log()
+}
+
+// Init initialize the library - it should be called at main start.
+func init() {
+	if Default != nil {
+		return
+	}
+	closed = false
+
+	loggers = make([]sparalog.Logger, 0, 1)
+
+	DefaultStdoutWriter = writers.NewStdoutWriter()
+	Default = NewLogger()
+	DefaultDispatcher = Default.(*logger.Logger).Dispatcher
 }

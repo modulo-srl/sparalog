@@ -34,6 +34,11 @@ func NewTelegramWriter(botAPIKey string, channelID int) sparalog.Writer {
 	return &w
 }
 
+func (w *telegramWriter) Open() error {
+	w.worker.Start()
+	return nil
+}
+
 // Write enqueue an item and returns immediately,
 // or blocks while the internal queue is full.
 func (w *telegramWriter) Write(item sparalog.Item) {
@@ -41,7 +46,7 @@ func (w *telegramWriter) Write(item sparalog.Item) {
 }
 
 func (w *telegramWriter) Close() {
-	w.worker.Close(3)
+	w.worker.Stop(3)
 }
 
 func (w *telegramWriter) ProcessQueueItem(i sparalog.Item) {

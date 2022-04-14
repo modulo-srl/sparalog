@@ -51,6 +51,11 @@ func (w *sentryWriter) ProcessQueueItem(item sparalog.Item) {
 	})
 }
 
+func (w *sentryWriter) Open() error {
+	w.worker.Start()
+	return nil
+}
+
 func (w *sentryWriter) Close() {
-	w.worker.Close(3)
+	w.worker.Stop(3)
 }

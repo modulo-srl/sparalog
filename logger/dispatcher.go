@@ -168,7 +168,7 @@ func (d *Dispatcher) write(item sparalog.Item, defaultWriterOnly bool) {
 
 	defer func() {
 		if level == sparalog.FatalLevel {
-			d.Close()
+			d.Stop()
 			os.Exit(sparalog.FatalExitCode)
 		}
 	}()
@@ -219,8 +219,31 @@ func (d *Dispatcher) startFeedbackWatcher() {
 	}()
 }
 
-// Close terminate all the writers.
-func (d *Dispatcher) Close() {
+// Start starts all the writers.
+func (d *Dispatcher) Start() error {
+	openedWw := make(map[sparalog.Writer]bool)
+
+	for level := range d.writers {
+		for _, w := range d.writers[level] {
+			// Assure single call of writer.Open()
+			if _, ok := openedWw[w]; ok {
+				continue
+			}
+
+			err := w.Open()
+			if err != nil {
+				return err
+			}
+
+			openedWw[w] = true
+		}
+	}
+
+	return nil
+}
+
+// Stop terminate all the writers.
+func (d *Dispatcher) Stop() {
 	d.mu.Lock()
 
 	if d.closed {
@@ -285,5 +308,5 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 }
 
 func finalizeDispatcher(d *Dispatcher) {
-	d.Close()
+	d.Stop()
 }

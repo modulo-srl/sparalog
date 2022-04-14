@@ -67,6 +67,8 @@ type Logger interface {
 	// CloneContext returns a clone of the current context.
 	CloneContext() Context
 
+	// Open start the loggers and all the writers.
+	Open() error
 	// Close terminates loggers and all the writers.
 	Close()
 }
@@ -102,8 +104,10 @@ type Dispatcher interface {
 	// Dispatch sends an Item to the level writers.
 	Dispatch(Item)
 
-	// Close terminate all the writers.
-	Close()
+	// Start starts all the writers.
+	Start() error
+	// Stop terminate all the writers.
+	Stop()
 }
 
 // LevelState is the status of specific logging level, returned by Dispatcher.LevelState().
@@ -128,6 +132,8 @@ type Writer interface {
 	// Write writes an item.
 	Write(Item)
 
+	// Open starts the writer.
+	Open() error
 	// Close terminates the writer.
 	Close()
 }
