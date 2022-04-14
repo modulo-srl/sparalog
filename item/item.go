@@ -1,10 +1,7 @@
 package item
 
 import (
-	"crypto/md5"
 	"fmt"
-	"io"
-	"strings"
 	"time"
 
 	"github.com/modulo-srl/sparalog"
@@ -59,9 +56,6 @@ type Item struct {
 	line string
 
 	stackTrace string
-
-	fingerprint string
-	fpHash      string // calculated by Fingerprint()
 }
 
 // SetLogger assigns a logger to the item, for Log() further using.
@@ -97,63 +91,6 @@ func (i *Item) SetStackTrace(s string) {
 // GenerateStackTrace assign the stack trace of current position to the item.
 func (i *Item) GenerateStackTrace(callsToSkip int) {
 	i.SetStackTrace(env.StackTrace(callsToSkip + 1))
-}
-
-// UpdateFingerprint add data to fingerprint calculation.
-func (i *Item) UpdateFingerprint(args ...interface{}) {
-	if i.fingerprint != "" {
-		i.fingerprint += " "
-	}
-
-	i.fingerprint += strings.TrimSuffix(fmt.Sprintln(args...), "\n")
-}
-
-// Fingerprint calculated and caches the fingerprint of the item.
-// MD5( [last call of stacktrace] + data updated by UpdateFingerprint ).
-// Returns "" if no data and not stack are available.
-func (i *Item) Fingerprint() string {
-	if i.fpHash != "" {
-		return i.fpHash
-	}
-
-	raw := i.fingerprint
-
-	if i.stackTrace != "" {
-		// Prepend the last call of stacktrace.
-
-		getLastTrace := func() string {
-			idx := strings.Index(i.stackTrace, "\n")
-			if idx == -1 {
-				return ""
-			}
-			s := i.stackTrace[idx+1:]
-
-			idx = strings.Index(s, "\n")
-			if idx == -1 {
-				return ""
-			}
-			idx2 := strings.Index(s[idx+1:], "\n")
-			if idx2 == -1 {
-				return ""
-			}
-			s = s[:idx+idx2+1]
-
-			return strings.TrimSpace(s) + " "
-		}
-
-		raw = getLastTrace() + raw
-	}
-
-	if raw == "" {
-		return ""
-	}
-
-	h := md5.New()
-	io.WriteString(h, raw)
-
-	i.fpHash = fmt.Sprintf("%x", h.Sum(nil))
-
-	return i.fpHash
 }
 
 // Log sends the item to the assigned logger.

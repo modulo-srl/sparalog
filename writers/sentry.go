@@ -48,8 +48,6 @@ func (w *sentryWriter) ProcessQueueItem(item sparalog.Item) {
 		scope.SetContexts(item.Data())
 
 		sentry.CaptureMessage(s)
-
-		scope.SetFingerprint([]string{item.Fingerprint()})
 	})
 }
 

@@ -13,15 +13,11 @@ type Item interface {
 	GenerateStackTrace(callsToSkip int)
 	SetStackTrace(string)
 
-	UpdateFingerprint(args ...interface{})
-
 	ToString(timestamp, level bool) string
 
 	Log()
 
 	// Internal domain functions - should not be used out of this library.
-
-	Fingerprint() string
 
 	SetLogger(ItemLogger)
 }
