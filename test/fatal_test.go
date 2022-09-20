@@ -8,7 +8,7 @@ import (
 
 // TODO
 func TestFatal(t *testing.T) {
-	logs.Init("sparalog-test")
+	logs.Open()
 	//logs.StartPanicWatcher()
 
 	//logs.Fatal("test fatal")
@@ -16,7 +16,7 @@ func TestFatal(t *testing.T) {
 
 // TODO
 func TestError(t *testing.T) {
-	logs.Init("sparalog-test")
+	logs.Open()
 
 	logs.Error("test error")
 

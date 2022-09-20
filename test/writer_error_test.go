@@ -11,7 +11,7 @@ import (
 )
 
 func TestWriterError(t *testing.T) {
-	logs.Init("sparalog-test")
+	logs.Open()
 	defer logs.Done()
 
 	var forwardLoggeds int
@@ -46,7 +46,7 @@ func TestWriterError(t *testing.T) {
 }
 
 func TestAsyncWriterError(t *testing.T) {
-	logs.Init("sparalog-test")
+	logs.Open()
 	defer logs.Done()
 
 	var forwardLoggeds int

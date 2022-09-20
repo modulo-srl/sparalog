@@ -5,7 +5,6 @@ package test
 import (
 	"errors"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/modulo-srl/sparalog"
@@ -19,7 +18,7 @@ func TestContextData(t *testing.T) {
 // TODO
 func TestContextTags(t *testing.T) {
 	defer logs.Done()
-	logs.Init("sparalog-test")
+	logs.Open()
 
 	logs.SetContextTag("peerID", "pid")
 	logs.SetContextData("foo", "bar")
@@ -40,31 +39,10 @@ func TestContextTags(t *testing.T) {
 func TestPrefix(t *testing.T) {
 }
 
-func TestFingerprint(t *testing.T) {
-	defer logs.Done()
-	logs.Init("sparalog-test")
-
-	/*ws := logs.NewCallbackWriter(
-		func(item sparalog.Item) error {
-			fmt.Println(item.ToString(true, true))
-			forwardLoggeds++
-			return nil
-		},
-	)
-	logs.ResetLevelWriters(sparalog.ErrorLevel, ws)*/
-
-	i := logs.NewError(errors.New("test-error"))
-	fp := i.Fingerprint()
-
-	if len(fp) < 32 {
-		t.Fatal("Fingerprint error:", fp)
-	}
-}
-
 // TODO
 func TestContextPrefix(t *testing.T) {
 	defer logs.Done()
-	logs.Init("sparalog-test")
+	logs.Open()
 
 	logs.SetContextPrefix("%s", []string{"module"})
 
@@ -76,5 +54,5 @@ func TestContextPrefix(t *testing.T) {
 	//s := i.ToString(false, false)
 	fmt.Println(s)
 
-	os.Exit(1)
+	//os.Exit(1)
 }

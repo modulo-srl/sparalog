@@ -9,7 +9,7 @@ import (
 )
 
 func TestRootLoggerMethods(t *testing.T) {
-	logs.Init("sparalog-test")
+	logs.Open()
 
 	var traced string
 

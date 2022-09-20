@@ -9,7 +9,7 @@ import (
 )
 
 func TestMainPanic(t *testing.T) {
-	logs.Init("sparalog-test")
+	logs.Open()
 	defer logs.Done()
 
 	w := logs.NewCallbackWriter(

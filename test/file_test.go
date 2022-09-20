@@ -7,7 +7,7 @@ import (
 )
 
 func TestFile(t *testing.T) {
-	logs.Init("sparalog-test")
+	logs.Open()
 	defer logs.Done()
 
 	w, err := logs.NewFileWriter("test.log")
