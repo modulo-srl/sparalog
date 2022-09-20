@@ -1,0 +1,36 @@
+```plantuml
+@startuml logger
+
+skinparam componentStyle rectangle
+
+(app) as a
+[logger] as l
+[dispatcher] as d
+
+a -> l : method
+l -> d : items
+
+component "logging levels" as g #fff;line:white {
+
+    component "[]writer" as w1
+    component "[]writer" as w2  #eee;line.dashed
+    component "[]writer" as w3
+
+    w1 -[hidden]down- w2
+    w2 -[hidden]down- w3
+
+    d -right-> w1
+    d -right-> w2 #aaa;line.dashed
+    d -right-> w3
+
+    usecase "[]output" as o1
+    usecase "[]output" as o2 #eee;line.dashed
+    usecase "[]output" as o3
+
+    w1 -> o1
+    w2 -> o2 #aaa;line.dashed
+    w3 -> o3
+}
+
+@enduml
+```

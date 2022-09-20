@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="294px" preserveAspectRatio="none" style="width:664px;height:294px;background:#FFFFFF;" version="1.1" viewBox="0 0 664 294" width="664px" zoomAndPan="magnify"><defs/><g><!--MD5=[18d200b7cc7bdeecdf08bab2bd602124]
+cluster g--><g id="cluster_g"><rect fill="#FFFFFF" height="281" rx="2.5" ry="2.5" style="stroke:#FFFFFF;stroke-width:1.0;" width="249" x="409.5" y="7"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="111" x="478.5" y="21.9951">logging levels</text></g><!--MD5=[945bb76cb2232b12ba90c731e52d4c9b]
+entity w1--><g id="elem_w1"><rect fill="#F1F1F1" height="36.2969" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="73" x="426" y="42"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="53" x="436" y="64.9951">[]writer</text></g><!--MD5=[cde18378286e59c32eb7d59844b99053]
+entity w2--><g id="elem_w2"><rect fill="#EEEEEE" height="36.2969" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="73" x="426" y="139"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="53" x="436" y="161.9951">[]writer</text></g><!--MD5=[2322ab33e6c9753bb453b1a15e4f0394]
+entity w3--><g id="elem_w3"><rect fill="#F1F1F1" height="36.2969" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="73" x="426" y="236"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="53" x="436" y="258.9951">[]writer</text></g><g id="elem_o1"><ellipse cx="588.5937" cy="60.2277" fill="#F1F1F1" rx="54.0937" ry="14.7277" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59" x="556.0937" y="63.9753">[]output</text></g><g id="elem_o2"><ellipse cx="588.5937" cy="157.2277" fill="#EEEEEE" rx="54.0937" ry="14.7277" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59" x="556.0937" y="160.9753">[]output</text></g><g id="elem_o3"><ellipse cx="588.5937" cy="254.2277" fill="#F1F1F1" rx="54.0937" ry="14.7277" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59" x="556.0937" y="257.9753">[]output</text></g><g id="elem_a"><ellipse cx="37.2843" cy="60.0236" fill="#F1F1F1" rx="31.2843" ry="14.5236" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="28" x="23.2843" y="62.8703">app</text></g><!--MD5=[baa2ecd00d74afb0d8de1b5208cc46a6]
+entity l--><g id="elem_l"><rect fill="#F1F1F1" height="36.2969" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="66" x="155.5" y="42"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="46" x="165.5" y="64.9951">logger</text></g><!--MD5=[011db1d27274c86691871bc51b12beb8]
+entity d--><g id="elem_d"><rect fill="#F1F1F1" height="36.2969" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="97" x="294" y="42"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="77" x="304" y="64.9951">dispatcher</text></g><!--MD5=[2e907028399e2e29987dcc9bc49cc070]
+link a to l--><g id="link_a_l"><path d="M69.1545,60 C92.73,60 125.034,60 150.088,60 " fill="none" id="a-to-l" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="155.319,60,146.319,56,150.319,60,146.319,64,155.319,60" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="50" x="87.25" y="53.0669">method</text></g><!--MD5=[c9ba0dbf2462dd04cbd0ce14994385b6]
+link l to d--><g id="link_l_d"><path d="M221.537,60 C241.092,60 266.337,60 288.701,60 " fill="none" id="l-to-d" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="293.722,60,284.722,56,288.722,60,284.722,64,293.722,60" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="239.75" y="53.0669">items</text></g><!--MD5=[5f2a7f1ae2d73d0d47694fd3c3242103]
+link w1 to w2--><!--MD5=[4f8deedd1f18d815a14aaff8b277e584]
+link w2 to w3--><!--MD5=[37d089d2734ea69aac94c360bc0c6c95]
+link d to w1--><g id="link_d_w1"><path d="M391.25,60 C401.046,60 410.843,60 420.639,60 " fill="none" id="d-to-w1" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="425.762,60,416.762,56,420.762,60,416.762,64,425.762,60" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[b40b53f038f70dd3aa2718875ca10d3a]
+link d to w2--><g id="link_d_w2"><path d="M364.231,78.204 C384.705,94.412 415.382,118.698 437.003,135.815 " fill="none" id="d-to-w2" style="stroke:#AAAAAA;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#AAAAAA" points="440.931,138.924,436.3587,130.2008,437.0112,135.8199,431.3921,136.4724,440.931,138.924" style="stroke:#AAAAAA;stroke-width:1.0;"/></g><!--MD5=[25e4e2199234f7ef511494ae94689036]
+link d to w3--><g id="link_d_w3"><path d="M351.917,78.253 C364.357,100.807 387.189,141.395 408.5,175 C420.917,194.579 436.005,216.21 447.073,231.7164 " fill="none" id="d-to-w3" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="450.083,235.9208,448.0968,226.2743,447.1726,231.8551,441.5918,230.9309,450.083,235.9208" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[69371f918b40817ba0c277a4b5d8e0e1]
+link w1 to o1--><g id="link_w1_o1"><path d="M499.414,60 C509.292,60 519.17,60 529.048,60 " fill="none" id="w1-to-o1" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="534.213,60,525.213,56,529.213,60,525.213,64,534.213,60" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[0f419520e12ccc26b078906b5a5cbc9a]
+link w2 to o2--><g id="link_w2_o2"><path d="M499.414,157 C509.292,157 519.17,157 529.048,157 " fill="none" id="w2-to-o2" style="stroke:#AAAAAA;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#AAAAAA" points="534.213,157,525.213,153,529.213,157,525.213,161,534.213,157" style="stroke:#AAAAAA;stroke-width:1.0;"/></g><!--MD5=[e2ee7edd5c8067ec4b51538c635ca619]
+link w3 to o3--><g id="link_w3_o3"><path d="M499.414,254 C509.292,254 519.17,254 529.048,254 " fill="none" id="w3-to-o3" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="534.213,254,525.213,250,529.213,254,525.213,258,534.213,254" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[41de74cfb86132e8e6d1df3c415a00ff]
+@startuml
+skinparam componentStyle rectangle
+
+(app) as a
+[logger] as l
+[dispatcher] as d
+
+a -> l : method
+l -> d : items
+
+component "logging levels" as g #fff;line:white {
+
+    component "[]writer" as w1
+    component "[]writer" as w2  #eee;line.dashed
+    component "[]writer" as w3
+
+    w1 -[hidden]down- w2
+    w2 -[hidden]down- w3
+
+    d -right-> w1
+    d -right-> w2 #aaa;line.dashed
+    d -right-> w3
+
+    usecase "[]output" as o1
+    usecase "[]output" as o2 #eee;line.dashed
+    usecase "[]output" as o3
+
+    w1 -> o1
+    w2 -> o2 #aaa;line.dashed
+    w3 -> o3
+}
+@enduml
+
+PlantUML version 1.2022.8beta8(Unknown compile time)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

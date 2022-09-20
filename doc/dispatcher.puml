@@ -1,0 +1,30 @@
+```plantuml
+@startuml dispatcher
+
+skinparam componentStyle rectangle
+
+[logger] as l
+[dispatcher] as d
+
+l -> d : item
+
+component "level writers" as g #fff;line:white {
+    [writer \n(default)] as w1
+    [writer \n(additional)] as w2  #eee;line.dashed
+    w1 -[hidden]down- w2
+
+    d -right-> w1 : item
+    d -right-> w1 #Gray;line.dotted : feedback item 
+
+    d -right-> w2 : item
+    w2 -right-> d #Gray;line.dotted : feedback item
+
+    (output) as o1
+    (output) as o2  #eee;line.dashed
+
+    w1 -right-> o1
+    w2 .right.> o2
+}
+
+@enduml
+```

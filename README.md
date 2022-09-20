@@ -2,11 +2,17 @@
 
 Logging with independent streaming levels.
 
-![logger and writers diagram](https://tinyurl.com/yxkm7lyh)
+![logger diagram](/doc/img/logger.svg)
+
+![dispatcher diagram](/doc/img/dispatcher.svg)
+
 
 ## Features
 
-* One logger, multiple writers for every logging level.
+* One logger, mu/doc/img/dispatcher.svg.
+
+
+* One logger, mu/doc/img/dispatcher.svg.
 * Thread safe.
 * Light and tested.
 * Logs panics from all goroutines without defer.
