@@ -2,7 +2,9 @@
 
 Logging with independent streaming levels.
 
-![logger and writers diagram](https://tinyurl.com/yxkm7lyh)
+![logger diagram](/doc/img/logger.svg)
+
+![dispatcher diagram](/doc/img/dispatcher.svg)
 
 ## Features
 

@@ -12,7 +12,7 @@ import (
 
 func TestStacktraceLogger(t *testing.T) {
 	defer logs.Done()
-	logs.Init("sparalog-test")
+	logs.Open()
 
 	ws := logs.NewCallbackWriter(
 		func(item sparalog.Item) error {
