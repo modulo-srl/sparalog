@@ -41,8 +41,3 @@ func NewCallbackAsyncWriter(callback writers.CallbackWriterCallback) sparalog.Wr
 func NewTCPWriter(address string, port int, debug bool, cb writers.StateChangeCallback) (sparalog.Writer, error) {
 	return writers.NewTCPWriter(address, port, debug, cb)
 }
-
-// NewSyslogWriter returns a new syslogWriter.
-func NewSyslogWriter(tag string) sparalog.Writer {
-	return writers.NewSyslogWriter(tag)
-}
