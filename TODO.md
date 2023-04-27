@@ -4,8 +4,14 @@
 - Update read.me
 - Item with prefix and tostring cached (optimizing writers calls to Item's methods)
 
+### Sentry
+- to remove (CGO issues in projects that uses sparalog).
+
+### Syslog writer
+- print priority in text prefix (journalctl does not show priorities easily).
+
 ### TCP writer
-- example for auto enable level
+- example for auto enable level.
 
 ### Tests
 - TestGoroutinePanic() uses StartPanicWatcher() that is incompatible with multiple tests.  
