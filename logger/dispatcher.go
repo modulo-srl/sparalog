@@ -192,7 +192,8 @@ func (d *Dispatcher) write(item sparalog.Item, defaultWriterOnly bool) {
 			continue
 		}
 
-		w.Write(item)
+		i := item
+		w.Write(i)
 	}
 }
 
