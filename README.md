@@ -42,9 +42,6 @@ func main() {
     // Reset the default writer to file for all levels.
     logs.ResetWriters(wf)
 
-    // Add a Sentry writer for critical levels.
-    ws := logs.NewSentryWriter()
-
     logs.AddLevelsWriter(
         []sparalog.Level{
             sparalog.FatalLevel, sparalog.ErrorLevel, sparalog.WarnLevel,

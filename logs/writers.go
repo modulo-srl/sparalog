@@ -17,11 +17,6 @@ func NewFileWriter(filename string) (sparalog.Writer, error) {
 	return writers.NewFileWriter(filename)
 }
 
-// NewSentryWriter returns a new sentryWriter.
-func NewSentryWriter() sparalog.Writer {
-	return writers.NewSentryWriter()
-}
-
 // NewTelegramWriter returns a new telegramWriter.
 func NewTelegramWriter(botAPIKey string, channelID int) sparalog.Writer {
 	return writers.NewTelegramWriter(botAPIKey, channelID)
