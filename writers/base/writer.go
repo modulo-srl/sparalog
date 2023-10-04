@@ -1,6 +1,7 @@
 package base
 
 import (
+	"crypto/rand"
 	"fmt"
 
 	"github.com/modulo-srl/sparalog"
@@ -9,11 +10,23 @@ import (
 
 // Writer implements the base methods.
 type Writer struct {
+	id sparalog.WriterID
+
 	feedbackCh chan sparalog.Item
 }
 
 func (w *Writer) Open() error { return nil }
 func (w *Writer) Close()      {}
+
+func (w *Writer) ID() sparalog.WriterID {
+	if w.id == "" {
+		bb := make([]byte, 8)
+		rand.Read(bb)
+		w.id = sparalog.WriterID(fmt.Sprintf("%X", bb))
+	}
+
+	return w.id
+}
 
 // SetFeedbackChan set a channel to the level default writer of the logger.
 func (w *Writer) SetFeedbackChan(ch chan sparalog.Item) {

@@ -88,11 +88,11 @@ type Dispatcher interface {
 	// ResetLevelsWriters remove specific levels writers and reset to an optional default writer.
 	ResetLevelsWriters([]Level, Writer)
 	// AddWriter add a writer to all levels.
-	AddWriter(Writer, WriterID)
+	AddWriter(Writer)
 	// AddLevelWriter add a writer to a level.
-	AddLevelWriter(Level, Writer, WriterID)
+	AddLevelWriter(Level, Writer)
 	// AddLevelsWriter add a writer to several levels.
-	AddLevelsWriter([]Level, Writer, WriterID)
+	AddLevelsWriter([]Level, Writer)
 	// RemoveWriter delete a specific writer from level.
 	RemoveWriter(Level, WriterID)
 
@@ -119,6 +119,9 @@ type LevelState struct {
 
 // Writer is the writer used by the Logger for one or more log levels.
 type Writer interface {
+	// Get writer ID
+	ID() WriterID
+
 	// SetFeedbackChan set a channel to the level default writer of the logger.
 	SetFeedbackChan(chan Item)
 

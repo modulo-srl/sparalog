@@ -117,21 +117,18 @@ func ResetLevelsWriters(levels []sparalog.Level, defaultW sparalog.Writer) {
 }
 
 // AddWriter add a writer to all levels.
-// id is optional, but useful for RemoveWriter().
-func AddWriter(w sparalog.Writer, id sparalog.WriterID) {
-	DefaultDispatcher.AddWriter(w, id)
+func AddWriter(w sparalog.Writer) {
+	DefaultDispatcher.AddWriter(w)
 }
 
 // AddLevelWriter add a writer to a level.
-// id is optional, but useful for RemoveWriter().
-func AddLevelWriter(level sparalog.Level, w sparalog.Writer, id sparalog.WriterID) {
-	DefaultDispatcher.AddLevelWriter(level, w, id)
+func AddLevelWriter(level sparalog.Level, w sparalog.Writer) {
+	DefaultDispatcher.AddLevelWriter(level, w)
 }
 
 // AddLevelsWriter add a writer to several levels.
-// id is optional, but useful for RemoveWriter().
-func AddLevelsWriter(levels []sparalog.Level, w sparalog.Writer, id sparalog.WriterID) {
-	DefaultDispatcher.AddLevelsWriter(levels, w, id)
+func AddLevelsWriter(levels []sparalog.Level, w sparalog.Writer) {
+	DefaultDispatcher.AddLevelsWriter(levels, w)
 }
 
 // RemoveWriter delete a specific writer from level.

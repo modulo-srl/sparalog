@@ -21,7 +21,7 @@ func TestMainPanic(t *testing.T) {
 		},
 	)
 	//logs.ResetWriters(w)
-	logs.AddWriter(w, "")
+	logs.AddWriter(w)
 
 	makePanic()
 	t.Fatal("panic not logged")

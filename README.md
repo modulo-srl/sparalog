@@ -21,7 +21,7 @@ import "github.com/modulo-srl/sparalog/logs"
 func main() {
     ...
     // Default to stdout/stderror
-    logs.Init("my app v1.0")
+    logs.Open()
     defer logs.Done()
     ...
     logs.Error("error!")
@@ -33,9 +33,6 @@ func main() {
 ### Multiple writers
 
 ```go
-    logs.Init("my app v1.0")
-    defer logs.Done()
-
     // New writer to file.
     wf := logs.NewFileWriter("errors.log")
 
@@ -46,23 +43,24 @@ func main() {
         []sparalog.Level{
             sparalog.FatalLevel, sparalog.ErrorLevel, sparalog.WarnLevel,
         },
-        ws, "",
+        ws,
     )
     
     // New Telegram writer.
     wt := logs.NewTelegramWriter("api key", channel id)
     
     // Logs fatals to Telegram too.
-    logs.AddLevelWriter(sparalog.FatalLevel, wt, "")
+    logs.AddLevelWriter(sparalog.FatalLevel, wt)
 
+    logs.Open()
+    defer logs.Done()
+
+    ...
 ```
 
 ### Panics watcher
 
 ```go
-    logs.Init("my app v1.0")
-    defer logs.Done()
-
     // Logs fatals to Telegram too.
     wt := logs.NewTelegramWriter("api key", channel id)
     logs.AddLevelWriter(sparalog.FatalLevel, wt, "")
@@ -73,6 +71,7 @@ func main() {
     // - Avoid this call in debugging session!
     logs.StartPanicWatcher()
 
+    logs.Open()
 
     // Test
     go func() {
@@ -120,4 +119,4 @@ func main() {
 * Writers internal errors are redirected to the default writer.
 
 ---
-*Copyright 2020 [Modulo srl](http://www.modulo.srl) - Licensed under the MIT license*
+*Copyright 2020,2023 [Modulo srl](http://www.modulo.srl) - Licensed under the MIT license*

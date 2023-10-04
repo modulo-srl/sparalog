@@ -3,7 +3,6 @@ package logger
 import (
 	"os"
 	"runtime"
-	"strconv"
 	"sync"
 	"time"
 
@@ -73,52 +72,40 @@ func (d *Dispatcher) ResetLevelsWriters(levels []sparalog.Level, defaultW sparal
 }
 
 // AddWriter add a writer to all levels.
-// id is optional, but useful for RemoveWriter().
-func (d *Dispatcher) AddWriter(w sparalog.Writer, id sparalog.WriterID) {
+func (d *Dispatcher) AddWriter(w sparalog.Writer) {
 	for level := 0; level < int(sparalog.LevelsCount); level++ {
-		d.AddLevelWriter(sparalog.Level(level), w, id)
+		d.AddLevelWriter(sparalog.Level(level), w)
 		d.levState[level].NoWriters = false
 	}
 }
 
 // AddLevelWriter add a writer to a level.
-// id is optional, but useful for RemoveWriter().
-func (d *Dispatcher) AddLevelWriter(level sparalog.Level, w sparalog.Writer, id sparalog.WriterID) {
+func (d *Dispatcher) AddLevelWriter(level sparalog.Level, w sparalog.Writer) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if id == "" {
-		id = sparalog.WriterID(strconv.Itoa(len(d.writers[level])))
-	}
+	id := w.ID()
 
 	d.writers[level][id] = w
 
 	d.levState[level].NoWriters = false
 
-	if id != defaultWriterID {
-		w.SetFeedbackChan(d.writersFeedback)
-	}
+	w.SetFeedbackChan(d.writersFeedback)
 }
 
 // AddLevelsWriter add a writer to several levels.
-// id is optional, but useful for RemoveWriter().
-func (d *Dispatcher) AddLevelsWriter(levels []sparalog.Level, w sparalog.Writer, id sparalog.WriterID) {
+func (d *Dispatcher) AddLevelsWriter(levels []sparalog.Level, w sparalog.Writer) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	id := w.ID()
 	for _, level := range levels {
-		if id == "" {
-			id = sparalog.WriterID(strconv.Itoa(len(d.writers[level])))
-		}
-
 		d.writers[level][id] = w
 
 		d.levState[level].NoWriters = false
 	}
 
-	if id != defaultWriterID {
-		w.SetFeedbackChan(d.writersFeedback)
-	}
+	w.SetFeedbackChan(d.writersFeedback)
 }
 
 // RemoveWriter delete a specific writer from level.

@@ -3,6 +3,7 @@ package test
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -11,15 +12,16 @@ import (
 )
 
 func TestWriterError(t *testing.T) {
-	logs.Open()
-	defer logs.Done()
-
 	var forwardLoggeds int
+	var mu sync.Mutex
 
 	// Default writer.
 	ws := logs.NewCallbackWriter(
 		func(item sparalog.Item) error {
 			fmt.Println(item.ToString(true, true))
+
+			mu.Lock()
+			defer mu.Unlock()
 			forwardLoggeds++
 			return nil
 		},
@@ -31,11 +33,17 @@ func TestWriterError(t *testing.T) {
 			return errors.New("feedback error")
 		},
 	)
-	logs.AddWriter(wa, "")
+	logs.AddWriter(wa)
+
+	logs.Open()
+	defer logs.Done()
 
 	logs.Info("test writer error")
 
 	time.Sleep(time.Second) // assure writers forward channel processing.
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	switch {
 	case forwardLoggeds == 0:
@@ -46,16 +54,17 @@ func TestWriterError(t *testing.T) {
 }
 
 func TestAsyncWriterError(t *testing.T) {
-	logs.Open()
-	defer logs.Done()
-
 	var forwardLoggeds int
+	var mu sync.Mutex
 
 	// Default writer.
 	ws := logs.NewCallbackAsyncWriter(
 		func(item sparalog.Item) error {
 			fmt.Println("*** CATCHED! ***")
 			fmt.Println(item.ToString(true, true))
+
+			mu.Lock()
+			defer mu.Unlock()
 			forwardLoggeds++
 			return nil
 		},
@@ -67,11 +76,17 @@ func TestAsyncWriterError(t *testing.T) {
 			return errors.New("feedback error")
 		},
 	)
-	logs.AddWriter(wa, "")
+	logs.AddWriter(wa)
+
+	logs.Open()
+	defer logs.Done()
 
 	logs.Info("test async writer error")
 
 	time.Sleep(time.Second) // assure writers forward channel processing.
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	switch {
 	case forwardLoggeds == 0:
