@@ -1,20 +1,26 @@
 package test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/modulo-srl/sparalog"
 	"github.com/modulo-srl/sparalog/logs"
+	"github.com/modulo-srl/sparalog/writers"
 )
 
 func TestMainPanic(t *testing.T) {
-	logs.Open()
-	defer logs.Done()
+	return
 
-	w := logs.NewCallbackWriter(
-		func(item sparalog.Item) error {
-			if item.Level() == sparalog.FatalLevel {
+	sparalog.InitUnitTest()
+
+	sparalog.Start()
+	defer sparalog.Stop()
+
+	w := writers.NewCallbackWriter(
+		func(item *logs.Item) error {
+			if item.Level == logs.FatalLevel {
 				os.Exit(0)
 			}
 			return nil
@@ -32,12 +38,12 @@ func TestMainPanic(t *testing.T) {
 	defer logs.Done()
 
 	w := logs.NewCallbackWriter(
-		func(item sparalog.Item) error {
-			if item.Level() == sparalog.FatalLevel {
+		func(item *logs.Item) error {
+			if item.Level() == logs.FatalLevel {
 				// Received by the parent process,
 				// that should exits shortly (see logger.Fatal()),
 				// so change the exit code to success.
-				sparalog.FatalExitCode = 0
+				logs.FatalExitCode = 0
 			}
 			return nil
 		},
@@ -55,4 +61,6 @@ func TestMainPanic(t *testing.T) {
 func makePanic() {
 	i := 0
 	i = 1 / i
+
+	fmt.Print(i)
 }

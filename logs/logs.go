@@ -1,109 +1,39 @@
 package logs
 
-// Logging domain controller.
-// See root package for the model and interfaces.
+// Funzioni e variabili generali.
 
-import (
-	"os"
-	"strings"
+// Interfaccia del writer usata dal logger.
+type Writer interface {
+	ID() string
 
-	"github.com/mitchellh/panicwrap"
+	Write(*Item)
 
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/logger"
-	"github.com/modulo-srl/sparalog/writers"
-)
-
-// Default is the default global logger.
-var Default sparalog.Logger
-
-// DefaultDispatcher is the default global dispatcher.
-var DefaultDispatcher sparalog.Dispatcher
-
-// DefaultStdoutWriter is the default global writer to stdout.
-var DefaultStdoutWriter sparalog.Writer
-
-// StartPanicWatcher starts a supervisor that monitors panics in all goroutines.
-// Since the supervision is made starting a parent + child processes:
-// - Call the function after all writers initialization, or at least after fatal level initialization;
-// - This function should not to be called in debugging sessions.
-func StartPanicWatcher() {
-	exitStatus, err := panicwrap.Wrap(&panicwrap.WrapConfig{
-		Handler:   panicHandler,
-		HidePanic: true,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	// If exitStatus >= 0, then we're the parent process and the panicwrap
-	// re-executed ourselves and completed. Just exit with the proper status.
-	if exitStatus >= 0 {
-		os.Exit(exitStatus)
-	}
-
-	// Otherwise, exitStatus < 0 means we're the child. Continue executing as
-	// normal...
+	Start() error
+	Stop()
+	SetFeedbackChan(chan *Item)
 }
 
-// Open start the logger an all the writers.
-// It should be called after writers initialization.
-func Open() {
-	Default.Open()
+// Exit Code generato da Fatal() e Fatalf().
+var FatalExitCode = 1
+
+// Funzione di inizializzazione item appena dopo la sua allocazione,
+// permette di settare ulteriormente in modo custom specifiche proprietà.
+type InitItemF func(*Item)
+
+// Alloca un nuovo logger dotato di prefisso e di differente payload,
+// utilizzabile come componente in una struct o in un package.
+// Eredita una copia del payload dal logger di default.
+// - prefix: prefisso di default che comparirà nelle relative loggate.
+func NewLogger(prefix string) *Logger {
+	return newAliasLogger(defaultLogger, prefix)
 }
 
-// Done manages (current routine) panics and closes all the loggers,
-// waiting gently for the async writers.
-// It should be called at main exit.
-func Done() {
-	err := recover()
-	if err != nil {
-		Fatal(err)
-	}
-
-	if closed {
-		return
-	}
-	closed = true
-
-	for _, l := range loggers {
-		l.Close()
-	}
-
-	Default = nil
-	DefaultDispatcher = nil
-	DefaultStdoutWriter = nil
+// Setta un valore del payload di default del logger di default.
+func SetPayload(name string, value any) {
+	defaultLogger.SetPayload(name, value)
 }
 
-var loggers []sparalog.Logger
-var closed bool
-
-// output contains the full output (including stack traces) of the child panic.
-func panicHandler(output string) {
-	var st string
-
-	// Strip the stack trace.
-	i := strings.Index(output, "\n\n")
-	if i >= 0 {
-		st = "STACKTRACE (by watcher): " + strings.TrimSpace(output[i+2:])
-		output = output[:i]
-	}
-
-	item := Default.NewItem(sparalog.FatalLevel, output)
-	item.SetStackTrace(st)
-	item.Log()
-}
-
-// Init initialize the library - it should be called at main start.
-func init() {
-	if Default != nil {
-		return
-	}
-	closed = false
-
-	loggers = make([]sparalog.Logger, 0, 1)
-
-	DefaultStdoutWriter = writers.NewStdoutWriter()
-	Default = NewLogger()
-	DefaultDispatcher = Default.(*logger.Logger).Dispatcher
+// Imposta una funzione di inizializzazione per ogni item allocato dal logger di default.
+func SetInitItemFunc(f InitItemF) {
+	defaultLogger.initItemF = f
 }

@@ -6,19 +6,18 @@ package writers
 import (
 	"log/syslog"
 
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/writers/base"
+	"github.com/modulo-srl/sparalog/logs"
 )
 
-type syslogWriter struct {
-	base.Writer
+type SyslogWriter struct {
+	Writer
 
 	sys *syslog.Writer
 }
 
 // If tag is empty, the os.Args[0] is used.
-func NewSyslogWriter(tag string) sparalog.Writer {
-	w := syslogWriter{}
+func NewSyslogWriter(tag string) *SyslogWriter {
+	w := SyslogWriter{}
 
 	var err error
 	w.sys, err = syslog.New(syslog.LOG_INFO, tag)
@@ -30,23 +29,23 @@ func NewSyslogWriter(tag string) sparalog.Writer {
 	return &w
 }
 
-func (w *syslogWriter) Write(item sparalog.Item) {
-	switch item.Level() {
-	case sparalog.TraceLevel:
-		w.sys.Debug(item.ToString(false, false))
-	case sparalog.DebugLevel:
-		w.sys.Debug(item.ToString(false, false))
-	case sparalog.InfoLevel:
-		w.sys.Info(item.ToString(false, false))
-	case sparalog.WarnLevel:
-		w.sys.Warning(item.ToString(false, false))
-	case sparalog.ErrorLevel:
-		w.sys.Err(item.ToString(false, false))
-	case sparalog.FatalLevel:
-		w.sys.Crit(item.ToString(false, false))
+func (w *SyslogWriter) Write(item *logs.Item) {
+	s := item.ToString(false, true)
+
+	switch item.Level {
+	case logs.DebugLevel:
+		w.sys.Debug(s)
+	case logs.InfoLevel:
+		w.sys.Info(s)
+	case logs.WarningLevel:
+		w.sys.Warning(s)
+	case logs.ErrorLevel:
+		w.sys.Err(s)
+	case logs.FatalLevel:
+		w.sys.Crit(s)
 	}
 }
 
-func (w *syslogWriter) Close() {
+func (w *SyslogWriter) Stop() {
 	w.sys.Close()
 }

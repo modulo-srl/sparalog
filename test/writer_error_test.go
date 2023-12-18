@@ -9,15 +9,18 @@ import (
 
 	"github.com/modulo-srl/sparalog"
 	"github.com/modulo-srl/sparalog/logs"
+	"github.com/modulo-srl/sparalog/writers"
 )
 
 func TestWriterError(t *testing.T) {
+	sparalog.InitUnitTest()
+
 	var forwardLoggeds int
 	var mu sync.Mutex
 
 	// Default writer.
-	ws := logs.NewCallbackWriter(
-		func(item sparalog.Item) error {
+	ws := writers.NewCallbackWriter(
+		func(item *logs.Item) error {
 			fmt.Println(item.ToString(true, true))
 
 			mu.Lock()
@@ -26,21 +29,21 @@ func TestWriterError(t *testing.T) {
 			return nil
 		},
 	)
-	logs.ResetLevelWriters(sparalog.ErrorLevel, ws)
+	logs.ResetLevelWriters(logs.ErrorLevel, ws)
 
-	wa := logs.NewCallbackWriter(
-		func(item sparalog.Item) error {
+	wa := writers.NewCallbackWriter(
+		func(item *logs.Item) error {
 			return errors.New("feedback error")
 		},
 	)
 	logs.AddWriter(wa)
 
-	logs.Open()
-	defer logs.Done()
+	sparalog.Start()
+	defer sparalog.Stop()
 
 	logs.Info("test writer error")
 
-	time.Sleep(time.Second) // assure writers forward channel processing.
+	time.Sleep(50 * time.Millisecond)
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -54,12 +57,14 @@ func TestWriterError(t *testing.T) {
 }
 
 func TestAsyncWriterError(t *testing.T) {
+	sparalog.InitUnitTest()
+
 	var forwardLoggeds int
 	var mu sync.Mutex
 
 	// Default writer.
-	ws := logs.NewCallbackAsyncWriter(
-		func(item sparalog.Item) error {
+	ws := writers.NewCallbackAsyncWriter(
+		func(item *logs.Item) error {
 			fmt.Println("*** CATCHED! ***")
 			fmt.Println(item.ToString(true, true))
 
@@ -69,21 +74,21 @@ func TestAsyncWriterError(t *testing.T) {
 			return nil
 		},
 	)
-	logs.ResetLevelWriters(sparalog.ErrorLevel, ws)
+	logs.ResetLevelWriters(logs.ErrorLevel, ws)
 
-	wa := logs.NewCallbackAsyncWriter(
-		func(item sparalog.Item) error {
+	wa := writers.NewCallbackAsyncWriter(
+		func(item *logs.Item) error {
 			return errors.New("feedback error")
 		},
 	)
 	logs.AddWriter(wa)
 
-	logs.Open()
-	defer logs.Done()
+	sparalog.Start()
+	defer sparalog.Stop()
 
 	logs.Info("test async writer error")
 
-	time.Sleep(time.Second) // assure writers forward channel processing.
+	time.Sleep(50 * time.Millisecond)
 
 	mu.Lock()
 	defer mu.Unlock()

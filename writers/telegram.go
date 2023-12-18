@@ -7,67 +7,67 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/modulo-srl/sparalog"
 	"github.com/modulo-srl/sparalog/env"
-	"github.com/modulo-srl/sparalog/item"
-	"github.com/modulo-srl/sparalog/writers/base"
+	"github.com/modulo-srl/sparalog/logs"
 )
 
-type telegramWriter struct {
-	base.Writer
+type TelegramWriter struct {
+	Writer
 
 	apiKey    string
 	channelID int
-
-	worker *base.Worker
 }
 
 // NewTelegramWriter returns a telegramWriter.
-func NewTelegramWriter(botAPIKey string, channelID int) sparalog.Writer {
-	w := telegramWriter{
+func NewTelegramWriter(botAPIKey string, channelID int) *TelegramWriter {
+	w := TelegramWriter{
 		apiKey:    botAPIKey,
 		channelID: channelID,
 	}
 
-	w.worker = base.NewWorker(&w, 100)
-
 	return &w
 }
 
-func (w *telegramWriter) Open() error {
-	w.worker.Start()
+func (w *TelegramWriter) Start() error {
+	w.StartQueue(100, w.onQueueItem)
+
 	return nil
 }
 
 // Write enqueue an item and returns immediately,
 // or blocks while the internal queue is full.
-func (w *telegramWriter) Write(item sparalog.Item) {
-	w.worker.Enqueue(item)
+func (w *TelegramWriter) Write(item *logs.Item) {
+	w.Enqueue(item)
 }
 
-func (w *telegramWriter) Close() {
-	w.worker.Stop(3)
+func (w *TelegramWriter) Stop() {
+	w.StopQueue(3)
 }
 
-func (w *telegramWriter) ProcessQueueItem(i sparalog.Item) {
+func (w *TelegramWriter) onQueueItem(i *logs.Item) error {
 	var s string
 
 	prog, host := env.Device()
 
-	s = sparalog.LevelsIcons[i.Level()] + " " +
-		prog + "<i>[ " + host + " ]</i>" + "\n\n" +
-		"<b>" + i.Line() + "</b>\n"
+	var msg string
+	if i.Prefix != "" {
+		msg = "[" + i.Prefix + "] " + i.Message
+	} else {
+		msg = i.Message
+	}
 
-	if i.StackTrace() != "" {
-		s += "\n<pre>" + i.StackTrace() + "</pre>\n"
+	s = logs.LevelsIcons[i.Level] + " " +
+		prog + "<i>[ " + host + " ]</i>" + "\n\n" +
+		"<b>" + msg + "</b>\n"
+
+	stack := i.StackTrace
+	if stack != "" {
+		s += "\n<pre>" + stack + "</pre>\n"
 	}
 
 	s += "\n" + env.Runtime()
 
-	err := w.sendMessage(s)
-	if err != nil {
-		w.FeedbackItem(item.NewError(1, err))
-	}
+	return w.sendMessage(s)
 }
 
 type telegramReq struct {
@@ -83,7 +83,7 @@ type telegramResp struct {
 	ErrorDesc string      `json:"description,omitempty"`
 }
 
-func (w *telegramWriter) sendMessage(s string) error {
+func (w *TelegramWriter) sendMessage(s string) error {
 	url := "https://api.telegram.org/bot" + w.apiKey + "/sendMessage"
 
 	reqData := telegramReq{
@@ -93,7 +93,7 @@ func (w *telegramWriter) sendMessage(s string) error {
 		Text:           s,
 	}
 
-	requestBody, err := json.Marshal(&reqData)
+	requestBody, _ := json.Marshal(&reqData)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {

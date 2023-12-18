@@ -1,163 +1,189 @@
 package logs
 
-// Default logger methods wrapper.
+// Logger.
 
 import (
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/logger"
+	"fmt"
+	"sync"
 )
 
-// NewLogger allocates, registers and returns a new Logger.
-func NewLogger() *logger.Logger {
-	if closed {
+type Logger struct {
+	initItemF InitItemF
+
+	prefix string
+
+	// Quante chiamate dello stackTrace escludere di default.
+	stackCallsToSkip int
+
+	muPayload sync.RWMutex
+	payload   map[string]any
+}
+
+// Alloca un nuovo logger.
+func newAliasLogger(logger *Logger, prefix string) *Logger {
+	l := Logger{
+		prefix:           prefix,
+		payload:          logger.getPayloadCopy(), // riceve una copia del payload se il logger padre ne è provvisto
+		initItemF:        logger.initItemF,
+		stackCallsToSkip: 0,
+	}
+
+	return &l
+}
+
+// Logga a livello fatale effetuando anche os.Exit(FatalExitCode)
+func (l *Logger) Fatal(args ...any) {
+	l.log(FatalLevel, args...)
+}
+
+// Logga a livello fatale effetuando anche os.Exit(FatalExitCode)
+func (l *Logger) Fatalf(format string, args ...any) {
+	l.log(FatalLevel, fmt.Sprintf(format, args...))
+}
+
+// Logga a livello errore.
+func (l *Logger) Error(args ...any) {
+	l.log(ErrorLevel, args...)
+}
+
+// Logga a livello errore.
+func (l *Logger) Errorf(format string, args ...any) {
+	l.log(ErrorLevel, fmt.Sprintf(format, args...))
+}
+
+// Logga a livello warning.
+func (l *Logger) Warning(args ...any) {
+	l.log(WarningLevel, args...)
+}
+
+// Logga a livello warning.
+func (l *Logger) Warningf(format string, args ...any) {
+	l.log(WarningLevel, fmt.Sprintf(format, args...))
+}
+
+// Logga a livello info.
+func (l *Logger) Info(args ...any) {
+	l.log(InfoLevel, args...)
+}
+
+// Logga a livello info.
+func (l *Logger) Infof(format string, args ...any) {
+	l.log(InfoLevel, fmt.Sprintf(format, args...))
+}
+
+// Logga a livello debug.
+func (l *Logger) Debug(args ...any) {
+	l.log(DebugLevel, args...)
+}
+
+// Logga a livello debug.
+func (l *Logger) Debugf(format string, args ...any) {
+	l.log(DebugLevel, fmt.Sprintf(format, args...))
+}
+
+// Genera un nuovo item di livello specifico.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func (l *Logger) NewItem(level Level, args ...any) *Item {
+	return l.newSelfItem(level, 1, fmt.Sprint(args...))
+}
+
+// Genera un nuovo item di livello specifico.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func (l *Logger) NewItemf(level Level, format string, args ...any) *Item {
+	return l.newSelfItem(level, 1, fmt.Sprintf(format, args...))
+}
+
+// Genera un nuovo item di livello errore.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func (l *Logger) NewErrorItem(err error) *Item {
+	return l.newSelfItem(ErrorLevel, 1, err.Error())
+}
+
+// Genera un nuovo item di livello errore.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func (l *Logger) NewErrorItemf(format string, a ...any) *Item {
+	return l.newSelfItem(ErrorLevel, 1, fmt.Errorf(format, a...).Error())
+}
+
+// Setta un valore del payload di default.
+func (l *Logger) SetPayload(key string, value any) {
+	l.muPayload.Lock()
+	defer l.muPayload.Unlock()
+
+	if l.payload == nil {
+		l.payload = make(map[string]any)
+	}
+
+	l.payload[key] = value
+}
+
+// Logga un item precedentemente generato.
+func (l *Logger) LogItem(item *Item) {
+	if !globalDispatcher.CanDispatch(item.Level) {
+		return
+	}
+
+	globalDispatcher.Dispatch(item)
+}
+
+// Imposta una funzione di inizializzazione per ogni item allocato dal logger.
+func (l *Logger) SetInitItemFunc(f InitItemF) {
+	l.initItemF = f
+}
+
+// Ritorna una copia del payload di default.
+func (l *Logger) getPayloadCopy() map[string]any {
+	l.muPayload.RLock()
+	defer l.muPayload.RUnlock()
+
+	if l.payload == nil {
 		return nil
 	}
 
-	l := logger.New(DefaultStdoutWriter)
-
-	if l != nil {
-		loggers = append(loggers, l)
+	payload := make(map[string]any)
+	for k, v := range l.payload {
+		payload[k] = v
 	}
 
-	return l
+	return payload
 }
 
-// NewAliasLogger allocate a logger that uses logs.Default writers.
-func NewAliasLogger() sparalog.Logger {
-	if closed {
-		return nil
+// Genera un nuovo item cedibile allo strato applicativo,
+// utilizzata dai vari logger.NewIem*() e logger.NewError*().
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata
+// ed eventualmente inizializza l'item con la funzione custom.
+func (l *Logger) newSelfItem(level Level, stackCallsToSkip int, msg string) *Item {
+	item := newItem(level, l.prefix, msg, l.stackCallsToSkip+stackCallsToSkip+1)
+
+	// Assegna una copia del payload del logger se ne è provvisto.
+	item.Payload = l.getPayloadCopy()
+
+	if l.initItemF != nil {
+		l.initItemF(item)
 	}
 
-	return logger.NewAlias(Default, DefaultDispatcher)
+	return item
 }
 
-// Fatalf sends to Default logger fatal stream using the same fmt.Printf() interface.
-func Fatalf(format string, args ...interface{}) {
-	Default.Logf(sparalog.FatalLevel, "", format, args...)
-}
+// Logga in uno specifico livello - entry point per tutti gli helper che loggano; thread safe.
+// Non fa nulla se il livello è mutato.
+func (l *Logger) log(level Level, args ...any) {
+	if !globalDispatcher.CanDispatch(level) {
+		return
+	}
 
-// Fatal sends to Default logger fatal stream using the same fmt.Print() interface.
-func Fatal(args ...interface{}) {
-	Default.Log(sparalog.FatalLevel, "", args...)
-}
+	item := newItem(level, l.prefix, fmt.Sprint(args...), l.stackCallsToSkip+2)
 
-// Errorf sends to Default logger error stream using the same fmt.Printf() interface.
-func Errorf(format string, args ...interface{}) {
-	Default.Logf(sparalog.ErrorLevel, "", format, args...)
-}
+	// Assegna direttamente il puntatore al payload,
+	// dal momento che l'item viene generato e immediatamente loggato
+	// senza essere ulteriormente manipolato.
+	l.muPayload.RLock()
+	item.Payload = l.payload
+	l.muPayload.RUnlock()
 
-// Error sends to Default logger error stream using the same fmt.Print() interface.
-func Error(args ...interface{}) {
-	Default.Log(sparalog.ErrorLevel, "", args...)
-}
+	if l.initItemF != nil {
+		l.initItemF(item)
+	}
 
-// Warnf sends to Default logger warning stream using the same fmt.Printf() interface.
-func Warnf(format string, args ...interface{}) {
-	Default.Logf(sparalog.WarnLevel, "", format, args...)
-}
-
-// Warn sends to Default logger warning stream using the same fmt.Print() interface.
-func Warn(args ...interface{}) {
-	Default.Log(sparalog.WarnLevel, "", args...)
-}
-
-// Infof sends to Default logger info stream using the same fmt.Printf() interface.
-func Infof(format string, args ...interface{}) {
-	Default.Logf(sparalog.InfoLevel, "", format, args...)
-}
-
-// Info sends to Default logger info stream using the same fmt.Print() interface.
-func Info(args ...interface{}) {
-	Default.Log(sparalog.InfoLevel, "", args...)
-}
-
-// Debugf sends to Default logger debug stream using the same fmt.Printf() interface.
-func Debugf(format string, args ...interface{}) {
-	Default.Logf(sparalog.DebugLevel, "", format, args...)
-}
-
-// Debug sends to Default logger debug stream using the same fmt.Print() interface.
-func Debug(args ...interface{}) {
-	Default.Log(sparalog.DebugLevel, "", args...)
-}
-
-// Tracef sends to Default logger trace stream using the same fmt.Printf() interface.
-func Tracef(format string, args ...interface{}) {
-	Default.Logf(sparalog.TraceLevel, "", format, args...)
-}
-
-// Trace sends to Default logger trace stream using the same fmt.Print() interface.
-func Trace(args ...interface{}) {
-	Default.Log(sparalog.TraceLevel, "", args...)
-}
-
-// Printf sends to Default logger info stream using the same fmt.Printf() interface.
-func Printf(format string, args ...interface{}) {
-	Default.Logf(sparalog.InfoLevel, "", format, args...)
-}
-
-// Print sends to Default logger info stream using the same fmt.Print() interface.
-func Print(args ...interface{}) {
-	Default.Log(sparalog.InfoLevel, "", args...)
-}
-
-// ResetWriters reset the writers for all the levels to an optional default writer.
-func ResetWriters(defaultW sparalog.Writer) {
-	DefaultDispatcher.ResetWriters(defaultW)
-}
-
-// ResetLevelWriters remove all level's writers and reset to an optional default writer.
-func ResetLevelWriters(level sparalog.Level, defaultW sparalog.Writer) {
-	DefaultDispatcher.ResetLevelWriters(level, defaultW)
-}
-
-// ResetLevelsWriters remove specific levels writers and reset to an optional default writer.
-func ResetLevelsWriters(levels []sparalog.Level, defaultW sparalog.Writer) {
-	DefaultDispatcher.ResetLevelsWriters(levels, defaultW)
-}
-
-// AddWriter add a writer to all levels.
-func AddWriter(w sparalog.Writer) {
-	DefaultDispatcher.AddWriter(w)
-}
-
-// AddLevelWriter add a writer to a level.
-func AddLevelWriter(level sparalog.Level, w sparalog.Writer) {
-	DefaultDispatcher.AddLevelWriter(level, w)
-}
-
-// AddLevelsWriter add a writer to several levels.
-func AddLevelsWriter(levels []sparalog.Level, w sparalog.Writer) {
-	DefaultDispatcher.AddLevelsWriter(levels, w)
-}
-
-// RemoveWriter delete a specific writer from level.
-func RemoveWriter(level sparalog.Level, id sparalog.WriterID) {
-	DefaultDispatcher.RemoveWriter(level, id)
-}
-
-// Mute mute/unmute a specific level.
-func Mute(level sparalog.Level, state bool) {
-	DefaultDispatcher.Mute(level, state)
-}
-
-// EnableStacktrace enable stacktrace for a specific level.
-func EnableStacktrace(level sparalog.Level, state bool) {
-	DefaultDispatcher.EnableStacktrace(level, state)
-}
-
-// SetContextTag sets a context tag.
-func SetContextTag(name, value string) {
-	Default.SetContextTag(name, value)
-}
-
-// SetContextData sets a context data payload.
-func SetContextData(key string, value interface{}) {
-	Default.SetContextData(key, value)
-}
-
-// SetContextPrefix sets the context prefix.
-// Tags is the list of the tags names that will be rendered according to format.
-func SetContextPrefix(format string, tags []string) {
-	Default.SetContextPrefix(format, tags)
+	globalDispatcher.Dispatch(item)
 }

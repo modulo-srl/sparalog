@@ -1,4 +1,6 @@
-package sparalog
+package logs
+
+// Livelli di log.
 
 // Level type.
 type Level int
@@ -14,17 +16,14 @@ const (
 	// SysAdmin should be notified automatically, but doesn't need to be dragged out of bed.
 	// Stack trace enabled by default.
 	ErrorLevel
-	// WarnLevel - Anything that can potentially cause application oddities, but automatically recovered.
-	WarnLevel
+	// WarningLevel - Anything that can potentially cause application oddities, but automatically recovered.
+	WarningLevel
 	// InfoLevel - General operational entries about what's going on inside the service or application.
 	// Should be the out-of-the-box level.
 	InfoLevel
-	// DebugLevel - Usually enabled only when debugging. Very verbose logging.
-	// Muted by default.
+	// DebugLevel - Tracciatura del flusso interno, di solito abilitato solo in modalità debug.
+	// Mutato di default.
 	DebugLevel
-	// TraceLevel - For tracing the code and trying to find one part of a function specifically.
-	// Muted by default.
-	TraceLevel
 
 	LevelsCount
 )
@@ -33,24 +32,32 @@ const (
 var Levels = [LevelsCount]Level{
 	FatalLevel,
 	ErrorLevel,
-	WarnLevel,
+	WarningLevel,
 	InfoLevel,
 	DebugLevel,
-	TraceLevel,
 }
 
 // CriticalLevels lists critical levels.
-var CriticalLevels = []Level{FatalLevel, ErrorLevel, WarnLevel}
-
-// DebugLevels lists debugging purpose levels.
-var DebugLevels = []Level{DebugLevel, TraceLevel}
+var CriticalLevels = []Level{FatalLevel, ErrorLevel, WarningLevel}
 
 // LevelsString is a constant of all logging levels names.
 var LevelsString = [LevelsCount]string{
-	"fatal", "error", "warning", "info", "debug", "trace",
+	"fatal", "error", "warning", "info", "debug",
 }
 
 // LevelsIcons is a constant of all logging levels UTF8 icons.
 var LevelsIcons = [LevelsCount]string{
-	"\xE2\x9D\x8C", "\xE2\x9D\x97", "\xE2\x9A\xA0", "\xE2\x84\xB9", "\xF0\x9F\x90\x9B", "\xF0\x9F\x94\x8E",
+	"\xE2\x9D\x8C", "\xE2\x9D\x97", "\xE2\x9A\xA0", "\xE2\x84\xB9", "\xF0\x9F\x90\x9B", /*"\xF0\x9F\x94\x8E",*/
+}
+
+// Attiva lo stacktrace per specifici livelli.
+// NON thread safe.
+func EnableLevelsStackTrace(levels []Level) {
+	for level := 0; level < int(LevelsCount); level++ {
+		levelsStackTrace[level] = false
+	}
+
+	for _, level := range levels {
+		levelsStackTrace[level] = true
+	}
 }

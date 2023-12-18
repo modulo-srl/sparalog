@@ -1,24 +1,41 @@
 package test
 
 import (
+	"os"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/modulo-srl/sparalog"
 	"github.com/modulo-srl/sparalog/logs"
+	"github.com/modulo-srl/sparalog/writers"
 )
 
 func TestFile(t *testing.T) {
-	logs.Open()
-	defer logs.Done()
+	sparalog.InitUnitTest()
 
-	w, err := logs.NewFileWriter("test.log")
+	sparalog.Start()
+	defer sparalog.Stop()
+
+	os.Remove("test.log")
+
+	w, err := writers.NewFileWriter("test.log")
 	if err != nil {
 		t.Fatal(err)
 	}
 	logs.ResetWriters(w)
 
-	logs.StartPanicWatcher()
+	logs.Error("test-file")
 
-	logs.Error("test")
+	time.Sleep(50 * time.Millisecond)
 
-	// TODO load file and compare
+	bb, err := os.ReadFile("test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := string(bb)
+	if strings.Index(s, "test-file") <= 0 {
+		t.Fatal("mismatch: ", s)
+	}
 }

@@ -5,35 +5,32 @@ import (
 	"os"
 	"sync"
 
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/writers/base"
+	"github.com/modulo-srl/sparalog/logs"
 )
 
-type stdoutWriter struct {
-	base.Writer
+type StdoutWriter struct {
+	Writer
 
 	mu sync.Mutex
 }
 
 // NewStdoutWriter returns a stdoutWriter.
-func NewStdoutWriter() sparalog.Writer {
-	w := stdoutWriter{}
+func NewStdoutWriter() *StdoutWriter {
+	w := StdoutWriter{}
 
 	return &w
 }
 
-func (w *stdoutWriter) Write(item sparalog.Item) {
+func (w *StdoutWriter) Write(item *logs.Item) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	s := item.ToString(true, true)
 
-	if item.Level() <= sparalog.WarnLevel {
+	if item.Level <= logs.WarningLevel {
 		fmt.Fprintln(os.Stderr, s)
 		return
 	}
 
 	fmt.Println(s)
 }
-
-func (w *stdoutWriter) Close() {}

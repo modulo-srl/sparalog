@@ -6,12 +6,11 @@ import (
 	"net"
 	"sync"
 
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/writers/base"
+	"github.com/modulo-srl/sparalog/logs"
 )
 
-type tcpWriter struct {
-	base.Writer
+type TcpWriter struct {
+	Writer
 
 	debug bool
 
@@ -28,18 +27,17 @@ type tcpWriter struct {
 	conns     map[int]net.Conn
 	connsIdx  int
 	connCount int
-
-	worker *base.Worker
 }
 
 // StateChangeCallback is called (true) when first client connecting,
 // and (false) when there are no more clients.
 type StateChangeCallback func(bool)
 
-// NewTCPWriter returns a tcpWriter.
-func NewTCPWriter(address string, port int, debug bool, cb StateChangeCallback) (sparalog.Writer, error) {
+// Ritorna un nuovo TCP Writer.
+// - debug: se attivo logga in feedback eventuali errori e cambi di stato.
+func NewTCPWriter(address string, port int, debug bool, cb StateChangeCallback) (*TcpWriter, error) {
 
-	w := tcpWriter{
+	w := TcpWriter{
 		debug:   debug,
 		address: address,
 		port:    port,
@@ -48,12 +46,10 @@ func NewTCPWriter(address string, port int, debug bool, cb StateChangeCallback) 
 		conns:   make(map[int]net.Conn, 4),
 	}
 
-	w.worker = base.NewWorker(&w, 100)
-
 	return &w, nil
 }
 
-func (w *tcpWriter) startServer(address string, port int) error {
+func (w *TcpWriter) startServer(address string, port int) error {
 	if address == "0.0.0.0" {
 		address = ""
 	}
@@ -62,19 +58,19 @@ func (w *tcpWriter) startServer(address string, port int) error {
 
 	netAddr, err := net.ResolveTCPAddr("tcp4", address)
 	if err != nil {
-		return fmt.Errorf("Invalid address: %s", err)
+		return fmt.Errorf("invalid address: %s", err)
 	}
 
 	listener, err := net.Listen("tcp", netAddr.String())
 	if err != nil {
-		return fmt.Errorf("Failed to create listener: %s", err)
+		return fmt.Errorf("failed to create listener: %s", err)
 	}
 	w.listener = listener
 
 	return nil
 }
 
-func (w *tcpWriter) Open() error {
+func (w *TcpWriter) Start() error {
 	err := w.startServer(w.address, w.port)
 	if err != nil {
 		return err
@@ -82,19 +78,19 @@ func (w *tcpWriter) Open() error {
 
 	go w.serve()
 
-	w.worker.Start()
+	w.StartQueue(100, w.onQueueItem)
 
 	return nil
 }
 
-func (w *tcpWriter) Close() {
-	w.worker.Stop(1)
+func (w *TcpWriter) Stop() {
+	w.StopQueue(1)
 
 	close(w.quitCh)
 	//w.connsWG.Wait()
 }
 
-func (w *tcpWriter) Write(item sparalog.Item) {
+func (w *TcpWriter) Write(item *logs.Item) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
@@ -102,10 +98,10 @@ func (w *tcpWriter) Write(item sparalog.Item) {
 		return
 	}
 
-	w.worker.Enqueue(item)
+	w.Enqueue(item)
 }
 
-func (w *tcpWriter) ProcessQueueItem(item sparalog.Item) {
+func (w *TcpWriter) onQueueItem(item *logs.Item) error {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
@@ -115,19 +111,21 @@ func (w *tcpWriter) ProcessQueueItem(item sparalog.Item) {
 		_, err := conn.Write(bb)
 		if err != nil {
 			if w.debug {
-				w.Feedback(sparalog.DebugLevel, "error writing to client: ", err)
+				w.Feedback(logs.DebugLevel, "error writing to client: ", err)
 			}
 		}
 	}
+
+	return nil
 }
 
-func (w *tcpWriter) serve() {
+func (w *TcpWriter) serve() {
 	for {
 		select {
 
 		case <-w.quitCh:
 			if w.debug {
-				w.Feedback(sparalog.DebugLevel, "shutting down")
+				w.Feedback(logs.DebugLevel, "shutting down")
 			}
 			w.listener.Close()
 
@@ -139,7 +137,7 @@ func (w *tcpWriter) serve() {
 
 		default:
 			if w.debug {
-				w.Feedback(sparalog.DebugLevel, "Listening for clients")
+				w.Feedback(logs.DebugLevel, "Listening for clients")
 			}
 
 			//w.listener.SetDeadline(time.Now().Add(1e9))
@@ -149,7 +147,7 @@ func (w *tcpWriter) serve() {
 					continue
 				}
 				if w.debug {
-					w.Feedback(sparalog.DebugLevel, "Failed to accept connection:", err)
+					w.Feedback(logs.DebugLevel, "Failed to accept connection:", err)
 				}
 			}
 
@@ -160,7 +158,7 @@ func (w *tcpWriter) serve() {
 			w.conns[w.connsIdx] = conn
 
 			if w.debug {
-				w.Feedback(sparalog.DebugLevel, "Accepting TCP client ", w.connsIdx)
+				w.Feedback(logs.DebugLevel, "Accepting TCP client ", w.connsIdx)
 			}
 
 			w.connCount++
@@ -183,7 +181,7 @@ func (w *tcpWriter) serve() {
 				delete(w.conns, idx)
 
 				if w.debug {
-					w.Feedback(sparalog.DebugLevel, "Dispose TCP client ", idx)
+					w.Feedback(logs.DebugLevel, "Dispose TCP client ", idx)
 				}
 
 				w.connCount--
@@ -202,14 +200,14 @@ func (w *tcpWriter) serve() {
 	}
 }
 
-func (w *tcpWriter) handleConnection(conn net.Conn, id int) {
+func (w *TcpWriter) handleConnection(conn net.Conn, id int) {
 	if w.debug {
-		w.Feedback(sparalog.DebugLevel, "Accepted connection from ", conn.RemoteAddr())
+		w.Feedback(logs.DebugLevel, "Accepted connection from ", conn.RemoteAddr())
 	}
 
 	defer func() {
 		if w.debug {
-			w.Feedback(sparalog.DebugLevel, "Closed connection from ", conn.RemoteAddr())
+			w.Feedback(logs.DebugLevel, "Closed connection from ", conn.RemoteAddr())
 		}
 		conn.Close()
 	}()
@@ -224,18 +222,18 @@ func (w *tcpWriter) handleConnection(conn net.Conn, id int) {
 		switch {
 		case err != nil && (err != io.EOF):
 			if w.debug {
-				w.Feedback(sparalog.DebugLevel, "Read error: ", err.Error())
+				w.Feedback(logs.DebugLevel, "Read error: ", err.Error())
 			}
 
 		case err == io.EOF:
 			if w.debug {
-				w.Feedback(sparalog.DebugLevel, "continue reading")
+				w.Feedback(logs.DebugLevel, "continue reading")
 			}
 			fallthrough
 
 		case n == 0:
 			if w.debug {
-				w.Feedback(sparalog.DebugLevel, "Closing connection from ", conn.RemoteAddr())
+				w.Feedback(logs.DebugLevel, "Closing connection from ", conn.RemoteAddr())
 			}
 			return
 		}

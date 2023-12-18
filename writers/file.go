@@ -2,25 +2,22 @@ package writers
 
 import (
 	"os"
-	"sync"
 
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/item"
-	"github.com/modulo-srl/sparalog/writers/base"
+	"github.com/modulo-srl/sparalog/logs"
 )
 
-type fileWriter struct {
-	base.Writer
+type FileWriter struct {
+	Writer
 
-	mu sync.Mutex
+	//mu sync.Mutex
 
 	filename string
 	file     *os.File
 }
 
 // NewFileWriter returns a fileWriter.
-func NewFileWriter(filename string) (sparalog.Writer, error) {
-	w := fileWriter{
+func NewFileWriter(filename string) (*FileWriter, error) {
+	w := FileWriter{
 		filename: filename,
 	}
 
@@ -31,21 +28,25 @@ func NewFileWriter(filename string) (sparalog.Writer, error) {
 		return nil, err
 	}
 
+	w.StartQueue(100, w.onQueueItem)
+
 	return &w, nil
 }
 
-func (w *fileWriter) Write(i sparalog.Item) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	s := i.ToString(true, true)
-
-	_, err := w.file.WriteString(s + "\n")
-	if err != nil {
-		w.FeedbackItem(item.NewError(0, err))
-	}
+func (w *FileWriter) Write(item *logs.Item) {
+	w.Enqueue(item)
 }
 
-func (w *fileWriter) Close() {
+func (w *FileWriter) onQueueItem(item *logs.Item) error {
+	//w.mu.Lock()
+	//defer w.mu.Unlock()
+
+	s := item.ToString(true, true)
+
+	_, err := w.file.WriteString(s + "\n")
+	return err
+}
+
+func (w *FileWriter) Stop() {
 	w.file.Close()
 }

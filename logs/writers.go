@@ -1,38 +1,47 @@
 package logs
 
-// Writers constructors wrapper.
+// Funzioni per gestire i writer.
 
-import (
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/writers"
-)
-
-// NewStdoutWriter returns a new stdoutWriter.
-func NewStdoutWriter() sparalog.Writer {
-	return writers.NewStdoutWriter()
+// Disassocia tutti i writer e reimposta un writer di default
+// (il writer di default riceve le eventuali loggate di errore o di feedback da parte degli altri writer).
+// NON thread safe.
+func ResetWriters(defaultW Writer) {
+	globalDispatcher.ResetWriters(defaultW)
 }
 
-// NewFileWriter returns a new fileWriter.
-func NewFileWriter(filename string) (sparalog.Writer, error) {
-	return writers.NewFileWriter(filename)
+// Disassocia tutti i writer per un certo livello e ne reimposta un writer di default
+// (il writer di default riceve le eventuali loggate di errore o di feedback da parte degli altri writer).
+// NON thread safe.
+func ResetLevelWriters(level Level, defaultW Writer) {
+	globalDispatcher.ResetLevelWriters(level, defaultW)
 }
 
-// NewTelegramWriter returns a new telegramWriter.
-func NewTelegramWriter(botAPIKey string, channelID int) sparalog.Writer {
-	return writers.NewTelegramWriter(botAPIKey, channelID)
+// Disassocia tutti i writer per un set di livelli e ne reimposta un writer di default
+// (il writer di default riceve le eventuali loggate di errore o di feedback da parte degli altri writer).
+// NON thread safe.
+func ResetLevelsWriters(levels []Level, defaultW Writer) {
+	globalDispatcher.ResetLevelsWriters(levels, defaultW)
 }
 
-// NewCallbackWriter returns a new callbackWriter.
-func NewCallbackWriter(callback writers.CallbackWriterCallback) sparalog.Writer {
-	return writers.NewCallbackWriter(callback)
+// Associa un writer a tutti i livelli.
+// NON thread safe.
+func AddWriter(w Writer) {
+	globalDispatcher.AddWriter(w)
 }
 
-// NewCallbackAsyncWriter returns a new callbackAsyncWriter.
-func NewCallbackAsyncWriter(callback writers.CallbackWriterCallback) sparalog.Writer {
-	return writers.NewCallbackAsyncWriter(callback)
+// Associa un writer a uno specifico livello.
+// NON thread safe.
+func AddLevelWriter(level Level, w Writer) {
+	globalDispatcher.AddLevelWriter(level, w)
 }
 
-// NewTCPWriter return a new tcpWriter.
-func NewTCPWriter(address string, port int, debug bool, cb writers.StateChangeCallback) (sparalog.Writer, error) {
-	return writers.NewTCPWriter(address, port, debug, cb)
+// Associa un writer a un set di livelli.
+// NON thread safe.
+func AddLevelsWriter(levels []Level, w Writer) {
+	globalDispatcher.AddLevelsWriter(levels, w)
+}
+
+// Mute mute/unmute a specific level.
+func Mute(level Level, state bool) {
+	globalDispatcher.Mute(level, state)
 }

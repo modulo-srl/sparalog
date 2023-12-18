@@ -6,13 +6,11 @@ package writers
 import (
 	"sync"
 
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/item"
-	"github.com/modulo-srl/sparalog/writers/base"
+	"github.com/modulo-srl/sparalog/logs"
 )
 
-type callbackWriter struct {
-	base.Writer
+type CallbackWriter struct {
+	Writer
 
 	mu sync.Mutex
 
@@ -20,63 +18,54 @@ type callbackWriter struct {
 }
 
 // CallbackWriterCallback define the writer callback.
-type CallbackWriterCallback func(sparalog.Item) error
+type CallbackWriterCallback func(*logs.Item) error
 
 // NewCallbackWriter returns a callbackWriter.
-func NewCallbackWriter(callback CallbackWriterCallback) sparalog.Writer {
-	w := callbackWriter{
+func NewCallbackWriter(callback CallbackWriterCallback) *CallbackWriter {
+	w := CallbackWriter{
 		callback: callback,
 	}
 
 	return &w
 }
 
-func (w *callbackWriter) Write(i sparalog.Item) {
+func (w *CallbackWriter) Write(item *logs.Item) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	err := w.callback(i)
+	err := w.callback(item)
 	if err != nil {
-		w.FeedbackItem(item.NewError(1, err))
+		w.FeedbackError(err)
 		return
 	}
 }
 
-type callbackAsyncWriter struct {
-	base.Writer
-
-	worker *base.Worker
+type CallbackAsyncWriter struct {
+	Writer
 
 	callback CallbackWriterCallback
 }
 
 // NewCallbackAsyncWriter returns a callbackAsyncWriter.
-func NewCallbackAsyncWriter(callback CallbackWriterCallback) sparalog.Writer {
-	w := callbackAsyncWriter{
+func NewCallbackAsyncWriter(callback CallbackWriterCallback) *CallbackAsyncWriter {
+	return &CallbackAsyncWriter{
 		callback: callback,
 	}
-
-	w.worker = base.NewWorker(&w, 100)
-
-	return &w
 }
 
-func (w *callbackAsyncWriter) Open() error {
-	w.worker.Start()
+func (w *CallbackAsyncWriter) Start() error {
+	w.StartQueue(100, w.onQueueItem)
 	return nil
 }
 
-func (w *callbackAsyncWriter) Close() {
-	w.worker.Stop(1)
+func (w *CallbackAsyncWriter) Stop() {
+	w.StopQueue(1)
 }
 
-func (w *callbackAsyncWriter) Write(item sparalog.Item) {
-	w.worker.Enqueue(item)
+func (w *CallbackAsyncWriter) Write(item *logs.Item) {
+	w.Enqueue(item)
 }
 
-func (w *callbackAsyncWriter) ProcessQueueItem(i sparalog.Item) {
-	err := w.callback(i)
-	if err != nil {
-		w.FeedbackItem(item.NewError(1, err))
-	}
+func (w *CallbackAsyncWriter) onQueueItem(item *logs.Item) error {
+	return w.callback(item)
 }

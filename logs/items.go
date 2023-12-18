@@ -1,32 +1,27 @@
 package logs
 
-// Items constructors wrapper.
+// Funzioni per la generazione item generici (generati dal logger di default).
 
-import (
-	"fmt"
-
-	"github.com/modulo-srl/sparalog"
-	"github.com/modulo-srl/sparalog/logger"
-)
-
-// NewItem generate a new log item for the default logger.
-func NewItem(level sparalog.Level, args ...string) sparalog.Item {
-	return Default.NewItem(level, args...)
+// Genera un nuovo item dal logger di default, di livello specifico.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func NewItem(level Level, args ...any) *Item {
+	return defaultLogger.NewItem(level, args...)
 }
 
-// NewItemf generate a new log item for the default logger.
-func NewItemf(level sparalog.Level, format string, args ...string) sparalog.Item {
-	return Default.NewItemf(level, format, args...)
+// Genera un nuovo item dal logger di default, di livello specifico.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func NewItemf(level Level, format string, args ...any) *Item {
+	return defaultLogger.NewItemf(level, format, args...)
 }
 
-// NewError generate a new log item wrapping an error.
-func NewError(err error) sparalog.Item {
-	line := err.Error() // as logger.NewError()
-	return Default.(*logger.Logger).NewErrorItem(line)
+// Genera un nuovo item dal logger di default, di livello errore.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func NewErrorItem(err error) *Item {
+	return defaultLogger.NewErrorItem(err)
 }
 
-// NewErrorf generate a new log item wrapping an error, as Errorf().
-func NewErrorf(format string, a ...interface{}) sparalog.Item {
-	line := fmt.Errorf(format, a...).Error() // as logger.NewErrorf()
-	return Default.(*logger.Logger).NewErrorItem(line)
+// Genera un nuovo item dal logger di default, di livello errore.
+// Eredita una copia del payload dal logger che può essere ulteriormente customizzata.
+func NewErrorItemf(format string, a ...any) *Item {
+	return defaultLogger.NewErrorItemf(format, a...)
 }
