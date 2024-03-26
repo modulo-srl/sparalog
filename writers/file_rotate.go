@@ -23,6 +23,7 @@ type FileRotateWriter struct {
 }
 
 // NewFileRotateWriter returns a FileRotateWriter.
+// - rotateAfter: how long between one rotation and another (0 = no rotation).
 // - deleteNotCritical: if True removes the rotations that do not contain critical logs.
 func NewFileRotateWriter(filename string, rotateAfter time.Duration, deleteNotCritical bool) (*FileRotateWriter, error) {
 	w := FileRotateWriter{
@@ -54,6 +55,10 @@ func (w *FileRotateWriter) onQueueItem(item *logs.Item) error {
 	_, err := w.file.WriteString(s + "\n")
 	if err != nil {
 		return err
+	}
+
+	if w.rotateAfter == 0 {
+		return nil
 	}
 
 	if item.Level <= logs.WarningLevel {
