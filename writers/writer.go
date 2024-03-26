@@ -88,7 +88,7 @@ func (w *Writer) Feedback(level logs.Level, args ...any) {
 		return
 	}
 
-	w.feedbackCh <- logs.NewItem(level, w.ID(), fmt.Sprint(args...))
+	w.feedbackCh <- logs.NewItem(level, "(log writer) ", fmt.Sprint(args...))
 }
 
 // Genera un item e lo invia al writer di default del rispettivo livello.
@@ -97,7 +97,7 @@ func (w *Writer) Feedbackf(level logs.Level, format string, args ...any) {
 		return
 	}
 
-	w.feedbackCh <- logs.NewItem(level, w.ID(), fmt.Sprintf(format, args...))
+	w.feedbackCh <- logs.NewItem(level, "(log writer) ", fmt.Sprintf(format, args...))
 }
 
 // Incapsula e invia un errore al writer di default del livello ErrorLevel.

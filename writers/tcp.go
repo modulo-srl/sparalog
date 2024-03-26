@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/modulo-srl/sparalog/logs"
@@ -23,10 +24,13 @@ type TcpWriter struct {
 	quitCh   chan bool
 	//connsWG  sync.WaitGroup
 
-	mu        sync.RWMutex
-	conns     map[int]net.Conn
-	connsIdx  int
-	connCount int
+	mu          sync.RWMutex
+	conns       map[int]net.Conn
+	connsIdx    int
+	connCount   int
+	pause       bool
+	filter      string
+	filterInput bool
 }
 
 // StateChangeCallback is called (true) when first client connecting,
@@ -105,8 +109,22 @@ func (w *TcpWriter) onQueueItem(item *logs.Item) error {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
-	bb := []byte(item.ToString(true, true) + "\n")
+	if w.pause {
+		return nil
+	}
 
+	s := item.ToString(true, true) + "\n"
+
+	if w.filter != "" {
+		i := strings.Index(s, w.filter)
+		if i < 0 {
+			return nil
+		}
+
+		s = s[0:i] + "\033[91m" + s[i:i+len(w.filter)] + "\033[39m" + s[i+len(w.filter):]
+	}
+
+	bb := []byte(s)
 	for _, conn := range w.conns {
 		_, err := conn.Write(bb)
 		if err != nil {
@@ -173,7 +191,7 @@ func (w *TcpWriter) serve() {
 
 			//w.connsWG.Add(1)
 			go func(idx int) {
-				w.handleConnection(conn, 0)
+				w.handleConnection(conn)
 
 				// Delete connection from the pool.
 				w.mu.Lock()
@@ -200,7 +218,7 @@ func (w *TcpWriter) serve() {
 	}
 }
 
-func (w *TcpWriter) handleConnection(conn net.Conn, id int) {
+func (w *TcpWriter) handleConnection(conn net.Conn) {
 	if w.debug {
 		w.Feedback(logs.DebugLevel, "Accepted connection from ", conn.RemoteAddr())
 	}
@@ -227,7 +245,7 @@ func (w *TcpWriter) handleConnection(conn net.Conn, id int) {
 
 		case err == io.EOF:
 			if w.debug {
-				w.Feedback(logs.DebugLevel, "continue reading")
+				w.Feedback(logs.DebugLevel, "Continue reading")
 			}
 			fallthrough
 
@@ -236,6 +254,33 @@ func (w *TcpWriter) handleConnection(conn net.Conn, id int) {
 				w.Feedback(logs.DebugLevel, "Closing connection from ", conn.RemoteAddr())
 			}
 			return
+		}
+
+		s := string(buf[:n-1])
+		switch {
+		case w.filterInput:
+			f := strings.TrimSpace(s)
+
+			w.mu.Lock()
+			w.filter = f
+			w.pause = false
+			w.mu.Unlock()
+
+			if f == "" {
+				conn.Write([]byte("Show all logs\n"))
+			} else {
+				conn.Write([]byte("Show logs for \"" + f + "\"\n"))
+			}
+
+			w.filterInput = false
+
+		case s == "filter":
+			w.mu.Lock()
+			w.pause = true
+			w.mu.Unlock()
+
+			conn.Write([]byte("\nFilter: "))
+			w.filterInput = true
 		}
 	}
 }
