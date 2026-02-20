@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/modulo-srl/sparalog/env"
@@ -83,6 +84,12 @@ type telegramResp struct {
 	ErrorDesc string      `json:"description,omitempty"`
 }
 
+type telegramErrorResp struct {
+	Ok          bool   `json:"ok"`
+	ErrorCode   int    `json:"error_code"`
+	Description string `json:"description"`
+}
+
 func (w *TelegramWriter) sendMessage(s string) error {
 	url := "https://api.telegram.org/bot" + w.apiKey + "/sendMessage"
 
@@ -113,10 +120,20 @@ func (w *TelegramWriter) sendMessage(s string) error {
 
 	// Read response.
 	if resp.StatusCode != 200 {
+		// Prova a decodificare l'errore
+		b, err := io.ReadAll(resp.Body)
+		if err == nil {
+			var respError telegramErrorResp
+			err = json.Unmarshal(b, &respError)
+			if err == nil {
+				return fmt.Errorf("[%d] %s", respError.ErrorCode, respError.Description)
+			}
+		}
+
 		return errors.New("http status: " + resp.Status)
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
